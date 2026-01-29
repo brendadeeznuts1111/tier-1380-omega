@@ -15,90 +15,90 @@
  * Learn more: See SKILL.md Issue #1 for Next.js hydration handling
  */
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface User {
-  id: string
-  name: string
-  email: string
+	id: string;
+	name: string;
+	email: string;
 }
 
 interface PersistedStore {
-  // State
-  theme: 'light' | 'dark' | 'system'
-  language: string
-  user: User | null
-  preferences: {
-    notifications: boolean
-    emailUpdates: boolean
-  }
+	// State
+	theme: "light" | "dark" | "system";
+	language: string;
+	user: User | null;
+	preferences: {
+		notifications: boolean;
+		emailUpdates: boolean;
+	};
 
-  // Actions
-  setTheme: (theme: PersistedStore['theme']) => void
-  setLanguage: (language: string) => void
-  setUser: (user: User | null) => void
-  updatePreferences: (prefs: Partial<PersistedStore['preferences']>) => void
-  reset: () => void
+	// Actions
+	setTheme: (theme: PersistedStore["theme"]) => void;
+	setLanguage: (language: string) => void;
+	setUser: (user: User | null) => void;
+	updatePreferences: (prefs: Partial<PersistedStore["preferences"]>) => void;
+	reset: () => void;
 }
 
 const initialState = {
-  theme: 'system' as const,
-  language: 'en',
-  user: null,
-  preferences: {
-    notifications: true,
-    emailUpdates: false,
-  },
-}
+	theme: "system" as const,
+	language: "en",
+	user: null,
+	preferences: {
+		notifications: true,
+		emailUpdates: false,
+	},
+};
 
 export const usePersistedStore = create<PersistedStore>()(
-  persist(
-    (set) => ({
-      ...initialState,
+	persist(
+		(set) => ({
+			...initialState,
 
-      // Actions
-      setTheme: (theme) => set({ theme }),
+			// Actions
+			setTheme: (theme) => set({ theme }),
 
-      setLanguage: (language) => set({ language }),
+			setLanguage: (language) => set({ language }),
 
-      setUser: (user) => set({ user }),
+			setUser: (user) => set({ user }),
 
-      updatePreferences: (prefs) =>
-        set((state) => ({
-          preferences: { ...state.preferences, ...prefs },
-        })),
+			updatePreferences: (prefs) =>
+				set((state) => ({
+					preferences: { ...state.preferences, ...prefs },
+				})),
 
-      reset: () => set(initialState),
-    }),
-    {
-      name: 'app-storage', // unique name in localStorage
+			reset: () => set(initialState),
+		}),
+		{
+			name: "app-storage", // unique name in localStorage
 
-      // Optional: use sessionStorage instead
-      // storage: createJSONStorage(() => sessionStorage),
+			// Optional: use sessionStorage instead
+			// storage: createJSONStorage(() => sessionStorage),
 
-      // Optional: only persist specific fields
-      // partialize: (state) => ({
-      //   theme: state.theme,
-      //   language: state.language,
-      //   preferences: state.preferences,
-      //   // Don't persist user (privacy)
-      // }),
+			// Optional: only persist specific fields
+			// partialize: (state) => ({
+			//   theme: state.theme,
+			//   language: state.language,
+			//   preferences: state.preferences,
+			//   // Don't persist user (privacy)
+			// }),
 
-      // Optional: version and migration for schema changes
-      version: 1,
-      migrate: (persistedState: any, version) => {
-        if (version === 0) {
-          // Migration from version 0 to 1
-          // Example: rename field
-          persistedState.language = persistedState.lang || 'en'
-          delete persistedState.lang
-        }
-        return persistedState
-      },
-    },
-  ),
-)
+			// Optional: version and migration for schema changes
+			version: 1,
+			migrate: (persistedState: any, version) => {
+				if (version === 0) {
+					// Migration from version 0 to 1
+					// Example: rename field
+					persistedState.language = persistedState.lang || "en";
+					delete persistedState.lang;
+				}
+				return persistedState;
+			},
+		},
+	),
+);
 
 /**
  * Usage in component:

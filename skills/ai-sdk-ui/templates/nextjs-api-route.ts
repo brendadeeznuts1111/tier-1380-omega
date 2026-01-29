@@ -15,22 +15,22 @@
 // ============================================================================
 // Location: app/api/chat/route.ts
 
-import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+	const { messages } = await req.json();
 
-  const result = streamText({
-    model: openai('gpt-4-turbo'),
-    messages,
-    system: 'You are a helpful AI assistant.',
-    maxOutputTokens: 1000,
-    temperature: 0.7,
-  });
+	const result = streamText({
+		model: openai("gpt-4-turbo"),
+		messages,
+		system: "You are a helpful AI assistant.",
+		maxOutputTokens: 1000,
+		temperature: 0.7,
+	});
 
-  // App Router: Use toDataStreamResponse()
-  return result.toDataStreamResponse();
+	// App Router: Use toDataStreamResponse()
+	return result.toDataStreamResponse();
 }
 
 // ============================================================================

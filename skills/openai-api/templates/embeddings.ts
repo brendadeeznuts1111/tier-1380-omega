@@ -9,10 +9,10 @@
  * - Cosine similarity for semantic search
  */
 
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+	apiKey: process.env.OPENAI_API_KEY,
 });
 
 // =============================================================================
@@ -20,16 +20,16 @@ const openai = new OpenAI({
 // =============================================================================
 
 async function basicEmbedding() {
-  const embedding = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: 'The food was delicious and the waiter was friendly.',
-  });
+	const embedding = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: "The food was delicious and the waiter was friendly.",
+	});
 
-  console.log('Embedding dimensions:', embedding.data[0].embedding.length);
-  console.log('First 5 values:', embedding.data[0].embedding.slice(0, 5));
-  console.log('Token usage:', embedding.usage);
+	console.log("Embedding dimensions:", embedding.data[0].embedding.length);
+	console.log("First 5 values:", embedding.data[0].embedding.slice(0, 5));
+	console.log("Token usage:", embedding.usage);
 
-  return embedding.data[0].embedding;
+	return embedding.data[0].embedding;
 }
 
 // =============================================================================
@@ -37,24 +37,24 @@ async function basicEmbedding() {
 // =============================================================================
 
 async function customDimensions() {
-  // Default: 1536 dimensions
-  const fullEmbedding = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: 'Sample text',
-  });
+	// Default: 1536 dimensions
+	const fullEmbedding = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: "Sample text",
+	});
 
-  console.log('Full dimensions:', fullEmbedding.data[0].embedding.length);
+	console.log("Full dimensions:", fullEmbedding.data[0].embedding.length);
 
-  // Reduced: 256 dimensions (6x storage reduction)
-  const reducedEmbedding = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: 'Sample text',
-    dimensions: 256,
-  });
+	// Reduced: 256 dimensions (6x storage reduction)
+	const reducedEmbedding = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: "Sample text",
+		dimensions: 256,
+	});
 
-  console.log('Reduced dimensions:', reducedEmbedding.data[0].embedding.length);
+	console.log("Reduced dimensions:", reducedEmbedding.data[0].embedding.length);
 
-  return reducedEmbedding.data[0].embedding;
+	return reducedEmbedding.data[0].embedding;
 }
 
 // =============================================================================
@@ -62,28 +62,28 @@ async function customDimensions() {
 // =============================================================================
 
 async function batchEmbeddings() {
-  const texts = [
-    'First document about TypeScript',
-    'Second document about Python',
-    'Third document about JavaScript',
-  ];
+	const texts = [
+		"First document about TypeScript",
+		"Second document about Python",
+		"Third document about JavaScript",
+	];
 
-  const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: texts,
-    dimensions: 512, // Optional: reduce dimensions
-  });
+	const response = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: texts,
+		dimensions: 512, // Optional: reduce dimensions
+	});
 
-  // Process results
-  const embeddings = response.data.map((item, index) => ({
-    text: texts[index],
-    embedding: item.embedding,
-  }));
+	// Process results
+	const embeddings = response.data.map((item, index) => ({
+		text: texts[index],
+		embedding: item.embedding,
+	}));
 
-  console.log(`Generated ${embeddings.length} embeddings`);
-  console.log('Total tokens used:', response.usage.total_tokens);
+	console.log(`Generated ${embeddings.length} embeddings`);
+	console.log("Total tokens used:", response.usage.total_tokens);
 
-  return embeddings;
+	return embeddings;
 }
 
 // =============================================================================
@@ -91,10 +91,10 @@ async function batchEmbeddings() {
 // =============================================================================
 
 function cosineSimilarity(a: number[], b: number[]): number {
-  const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
-  const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-  const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-  return dotProduct / (magnitudeA * magnitudeB);
+	const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
+	const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+	const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+	return dotProduct / (magnitudeA * magnitudeB);
 }
 
 // =============================================================================
@@ -102,8 +102,8 @@ function cosineSimilarity(a: number[], b: number[]): number {
 // =============================================================================
 
 function normalizeL2(vector: number[]): number[] {
-  const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-  return vector.map(val => val / magnitude);
+	const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+	return vector.map((val) => val / magnitude);
 }
 
 // =============================================================================
@@ -111,29 +111,29 @@ function normalizeL2(vector: number[]): number[] {
 // =============================================================================
 
 interface Document {
-  text: string;
-  embedding: number[];
+	text: string;
+	embedding: number[];
 }
 
 async function semanticSearch(query: string, documents: Document[]) {
-  // Embed the query
-  const queryEmbedding = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: query,
-  });
+	// Embed the query
+	const queryEmbedding = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: query,
+	});
 
-  const queryVector = queryEmbedding.data[0].embedding;
+	const queryVector = queryEmbedding.data[0].embedding;
 
-  // Calculate similarity scores
-  const results = documents.map(doc => ({
-    text: doc.text,
-    similarity: cosineSimilarity(queryVector, doc.embedding),
-  }));
+	// Calculate similarity scores
+	const results = documents.map((doc) => ({
+		text: doc.text,
+		similarity: cosineSimilarity(queryVector, doc.embedding),
+	}));
 
-  // Sort by similarity (highest first)
-  results.sort((a, b) => b.similarity - a.similarity);
+	// Sort by similarity (highest first)
+	results.sort((a, b) => b.similarity - a.similarity);
 
-  return results;
+	return results;
 }
 
 // =============================================================================
@@ -141,57 +141,57 @@ async function semanticSearch(query: string, documents: Document[]) {
 // =============================================================================
 
 async function ragExample() {
-  // 1. Create knowledge base
-  const knowledgeBase = [
-    'TypeScript is a superset of JavaScript that adds static typing.',
-    'Python is a high-level programming language known for readability.',
-    'React is a JavaScript library for building user interfaces.',
-    'Node.js is a JavaScript runtime built on Chrome\'s V8 engine.',
-  ];
+	// 1. Create knowledge base
+	const knowledgeBase = [
+		"TypeScript is a superset of JavaScript that adds static typing.",
+		"Python is a high-level programming language known for readability.",
+		"React is a JavaScript library for building user interfaces.",
+		"Node.js is a JavaScript runtime built on Chrome's V8 engine.",
+	];
 
-  // 2. Generate embeddings for knowledge base
-  const embeddingsResponse = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: knowledgeBase,
-  });
+	// 2. Generate embeddings for knowledge base
+	const embeddingsResponse = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: knowledgeBase,
+	});
 
-  const documents: Document[] = knowledgeBase.map((text, index) => ({
-    text,
-    embedding: embeddingsResponse.data[index].embedding,
-  }));
+	const documents: Document[] = knowledgeBase.map((text, index) => ({
+		text,
+		embedding: embeddingsResponse.data[index].embedding,
+	}));
 
-  // 3. User query
-  const userQuery = 'What is TypeScript?';
+	// 3. User query
+	const userQuery = "What is TypeScript?";
 
-  // 4. Find relevant documents
-  const searchResults = await semanticSearch(userQuery, documents);
-  const topResults = searchResults.slice(0, 2); // Top 2 most relevant
+	// 4. Find relevant documents
+	const searchResults = await semanticSearch(userQuery, documents);
+	const topResults = searchResults.slice(0, 2); // Top 2 most relevant
 
-  console.log('Most relevant documents:');
-  topResults.forEach(result => {
-    console.log(`- [${result.similarity.toFixed(3)}] ${result.text}`);
-  });
+	console.log("Most relevant documents:");
+	topResults.forEach((result) => {
+		console.log(`- [${result.similarity.toFixed(3)}] ${result.text}`);
+	});
 
-  // 5. Generate answer using retrieved context
-  const context = topResults.map(r => r.text).join('\n\n');
+	// 5. Generate answer using retrieved context
+	const context = topResults.map((r) => r.text).join("\n\n");
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-5',
-    messages: [
-      {
-        role: 'system',
-        content: `Answer the question using the following context:\n\n${context}`,
-      },
-      {
-        role: 'user',
-        content: userQuery,
-      },
-    ],
-  });
+	const completion = await openai.chat.completions.create({
+		model: "gpt-5",
+		messages: [
+			{
+				role: "system",
+				content: `Answer the question using the following context:\n\n${context}`,
+			},
+			{
+				role: "user",
+				content: userQuery,
+			},
+		],
+	});
 
-  console.log('\nAnswer:', completion.choices[0].message.content);
+	console.log("\nAnswer:", completion.choices[0].message.content);
 
-  return completion.choices[0].message.content;
+	return completion.choices[0].message.content;
 }
 
 // =============================================================================
@@ -199,23 +199,23 @@ async function ragExample() {
 // =============================================================================
 
 async function manualDimensionReduction() {
-  // Get full embedding
-  const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: 'Testing 123',
-  });
+	// Get full embedding
+	const response = await openai.embeddings.create({
+		model: "text-embedding-3-small",
+		input: "Testing 123",
+	});
 
-  const fullEmbedding = response.data[0].embedding;
-  console.log('Full dimensions:', fullEmbedding.length);
+	const fullEmbedding = response.data[0].embedding;
+	console.log("Full dimensions:", fullEmbedding.length);
 
-  // Truncate to 256 dimensions
-  const truncated = fullEmbedding.slice(0, 256);
-  console.log('Truncated dimensions:', truncated.length);
+	// Truncate to 256 dimensions
+	const truncated = fullEmbedding.slice(0, 256);
+	console.log("Truncated dimensions:", truncated.length);
 
-  // Normalize (recommended after truncation)
-  const normalized = normalizeL2(truncated);
+	// Normalize (recommended after truncation)
+	const normalized = normalizeL2(truncated);
 
-  return normalized;
+	return normalized;
 }
 
 // =============================================================================
@@ -223,45 +223,45 @@ async function manualDimensionReduction() {
 // =============================================================================
 
 async function main() {
-  console.log('=== OpenAI Embeddings Examples ===\n');
+	console.log("=== OpenAI Embeddings Examples ===\n");
 
-  // Example 1: Basic embedding
-  console.log('1. Basic Embedding:');
-  await basicEmbedding();
-  console.log();
+	// Example 1: Basic embedding
+	console.log("1. Basic Embedding:");
+	await basicEmbedding();
+	console.log();
 
-  // Example 2: Custom dimensions
-  console.log('2. Custom Dimensions:');
-  await customDimensions();
-  console.log();
+	// Example 2: Custom dimensions
+	console.log("2. Custom Dimensions:");
+	await customDimensions();
+	console.log();
 
-  // Example 3: Batch processing
-  console.log('3. Batch Processing:');
-  await batchEmbeddings();
-  console.log();
+	// Example 3: Batch processing
+	console.log("3. Batch Processing:");
+	await batchEmbeddings();
+	console.log();
 
-  // Example 4: RAG pattern
-  console.log('4. RAG (Retrieval-Augmented Generation):');
-  await ragExample();
-  console.log();
+	// Example 4: RAG pattern
+	console.log("4. RAG (Retrieval-Augmented Generation):");
+	await ragExample();
+	console.log();
 
-  // Example 5: Manual dimension reduction
-  console.log('5. Manual Dimension Reduction:');
-  await manualDimensionReduction();
-  console.log();
+	// Example 5: Manual dimension reduction
+	console.log("5. Manual Dimension Reduction:");
+	await manualDimensionReduction();
+	console.log();
 }
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch(console.error);
+	main().catch(console.error);
 }
 
 export {
-  basicEmbedding,
-  customDimensions,
-  batchEmbeddings,
-  semanticSearch,
-  ragExample,
-  cosineSimilarity,
-  normalizeL2,
+	basicEmbedding,
+	customDimensions,
+	batchEmbeddings,
+	semanticSearch,
+	ragExample,
+	cosineSimilarity,
+	normalizeL2,
 };

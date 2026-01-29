@@ -1,72 +1,72 @@
 // Cloudflare Workers with workers-ai-provider
 // AI SDK Core - Cloudflare Workers AI integration
 
-import { Hono } from 'hono';
-import { generateText, streamText } from 'ai';
-import { createWorkersAI } from 'workers-ai-provider';
+import { generateText, streamText } from "ai";
+import { Hono } from "hono";
+import { createWorkersAI } from "workers-ai-provider";
 
 // Environment interface for Workers AI binding
 interface Env {
-  AI: Ai;
+	AI: Ai;
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
 // Example 1: Basic text generation
-app.post('/chat', async (c) => {
-  // IMPORTANT: Create provider inside handler to avoid startup overhead
-  const workersai = createWorkersAI({ binding: c.env.AI });
+app.post("/chat", async (c) => {
+	// IMPORTANT: Create provider inside handler to avoid startup overhead
+	const workersai = createWorkersAI({ binding: c.env.AI });
 
-  const { message } = await c.req.json();
+	const { message } = await c.req.json();
 
-  const result = await generateText({
-    model: workersai('@cf/meta/llama-3.1-8b-instruct'),
-    prompt: message,
-    maxOutputTokens: 500,
-  });
+	const result = await generateText({
+		model: workersai("@cf/meta/llama-3.1-8b-instruct"),
+		prompt: message,
+		maxOutputTokens: 500,
+	});
 
-  return c.json({ response: result.text });
+	return c.json({ response: result.text });
 });
 
 // Example 2: Streaming response
-app.post('/chat/stream', async (c) => {
-  const workersai = createWorkersAI({ binding: c.env.AI });
+app.post("/chat/stream", async (c) => {
+	const workersai = createWorkersAI({ binding: c.env.AI });
 
-  const { message } = await c.req.json();
+	const { message } = await c.req.json();
 
-  const stream = streamText({
-    model: workersai('@cf/meta/llama-3.1-8b-instruct'),
-    prompt: message,
-  });
+	const stream = streamText({
+		model: workersai("@cf/meta/llama-3.1-8b-instruct"),
+		prompt: message,
+	});
 
-  // Return stream to client
-  return stream.toDataStreamResponse();
+	// Return stream to client
+	return stream.toDataStreamResponse();
 });
 
 // Example 3: Structured output
-app.post('/extract', async (c) => {
-  const workersai = createWorkersAI({ binding: c.env.AI });
+app.post("/extract", async (c) => {
+	const workersai = createWorkersAI({ binding: c.env.AI });
 
-  const { generateObject } = await import('ai');
-  const { z } = await import('zod');
+	const { generateObject } = await import("ai");
+	const { z } = await import("zod");
 
-  const { text } = await c.req.json();
+	const { text } = await c.req.json();
 
-  const result = await generateObject({
-    model: workersai('@cf/meta/llama-3.1-8b-instruct'),
-    schema: z.object({
-      summary: z.string(),
-      keyPoints: z.array(z.string()),
-    }),
-    prompt: `Extract key information from: ${text}`,
-  });
+	const result = await generateObject({
+		model: workersai("@cf/meta/llama-3.1-8b-instruct"),
+		schema: z.object({
+			summary: z.string(),
+			keyPoints: z.array(z.string()),
+		}),
+		prompt: `Extract key information from: ${text}`,
+	});
 
-  return c.json(result.object);
+	return c.json(result.object);
 });
 
 // Example 4: Health check
-app.get('/health', (c) => {
-  return c.json({ status: 'ok', ai: 'ready' });
+app.get("/health", (c) => {
+	return c.json({ status: "ok", ai: "ready" });
 });
 
 export default app;

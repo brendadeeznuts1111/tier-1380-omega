@@ -5,8 +5,8 @@
  * File: app/api/[...]/route.ts
  */
 
-import { NextResponse } from 'next/server'
 import { cookies, headers } from 'next/headers'
+import { NextResponse } from 'next/server'
 
 // ============================================================================
 // Example 1: Basic CRUD API

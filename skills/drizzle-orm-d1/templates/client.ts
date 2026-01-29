@@ -4,8 +4,8 @@
  * This file shows how to initialize the Drizzle client with D1 in a Cloudflare Worker.
  */
 
-import { drizzle } from 'drizzle-orm/d1';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/d1";
+import * as schema from "./schema";
 
 /**
  * Environment Interface
@@ -13,12 +13,12 @@ import * as schema from './schema';
  * Define your Worker's environment bindings
  */
 export interface Env {
-  // D1 database binding (name must match wrangler.jsonc)
-  DB: D1Database;
+	// D1 database binding (name must match wrangler.jsonc)
+	DB: D1Database;
 
-  // Add other bindings as needed
-  // KV: KVNamespace;
-  // R2: R2Bucket;
+	// Add other bindings as needed
+	// KV: KVNamespace;
+	// R2: R2Bucket;
 }
 
 /**
@@ -30,11 +30,11 @@ export interface Env {
  * @returns Drizzle database client
  */
 export function createDrizzleClient(db: D1Database) {
-  // Option 1: Without schema (for basic queries)
-  // return drizzle(db);
+	// Option 1: Without schema (for basic queries)
+	// return drizzle(db);
 
-  // Option 2: With schema (enables relational queries)
-  return drizzle(db, { schema });
+	// Option 2: With schema (enables relational queries)
+	return drizzle(db, { schema });
 }
 
 /**

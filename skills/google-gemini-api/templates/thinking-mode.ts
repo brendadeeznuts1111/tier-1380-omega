@@ -14,36 +14,39 @@
  * ℹ️ Thinking mode is ALWAYS ENABLED on Gemini 2.5 models (cannot be disabled)
  */
 
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from "@google/genai";
 
 async function main() {
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-  });
+	const ai = new GoogleGenAI({
+		apiKey: process.env.GEMINI_API_KEY,
+	});
 
-  try {
-    // Example 1: Default thinking budget
-    console.log('Example 1: Default Thinking Budget\n');
-    console.log('Prompt: Solve this complex math problem:\n');
-    console.log('If a train travels 120 km in 1.5 hours, then slows down to 60 km/h for 45 minutes, how far has it traveled total?\n');
+	try {
+		// Example 1: Default thinking budget
+		console.log("Example 1: Default Thinking Budget\n");
+		console.log("Prompt: Solve this complex math problem:\n");
+		console.log(
+			"If a train travels 120 km in 1.5 hours, then slows down to 60 km/h for 45 minutes, how far has it traveled total?\n",
+		);
 
-    const response1 = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: 'If a train travels 120 km in 1.5 hours, then slows down to 60 km/h for 45 minutes, how far has it traveled total?'
-      // No thinkingConfig = uses default budget
-    });
+		const response1 = await ai.models.generateContent({
+			model: "gemini-2.5-flash",
+			contents:
+				"If a train travels 120 km in 1.5 hours, then slows down to 60 km/h for 45 minutes, how far has it traveled total?",
+			// No thinkingConfig = uses default budget
+		});
 
-    console.log('Answer:', response1.text);
-    console.log('\nToken usage:', response1.usageMetadata);
-    console.log('\n---\n');
+		console.log("Answer:", response1.text);
+		console.log("\nToken usage:", response1.usageMetadata);
+		console.log("\n---\n");
 
-    // Example 2: Increased thinking budget for complex reasoning
-    console.log('Example 2: Increased Thinking Budget (8192 tokens)\n');
-    console.log('Prompt: Complex logic puzzle\n');
+		// Example 2: Increased thinking budget for complex reasoning
+		console.log("Example 2: Increased Thinking Budget (8192 tokens)\n");
+		console.log("Prompt: Complex logic puzzle\n");
 
-    const response2 = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `
+		const response2 = await ai.models.generateContent({
+			model: "gemini-2.5-flash",
+			contents: `
         Three people (Alice, Bob, Carol) have different jobs (doctor, engineer, teacher).
         Clues:
         1. Alice is not a doctor
@@ -53,24 +56,24 @@ async function main() {
 
         Who has which job?
       `,
-      config: {
-        thinkingConfig: {
-          thinkingBudget: 8192 // Increase budget for complex reasoning
-        }
-      }
-    });
+			config: {
+				thinkingConfig: {
+					thinkingBudget: 8192, // Increase budget for complex reasoning
+				},
+			},
+		});
 
-    console.log('Answer:', response2.text);
-    console.log('\nToken usage:', response2.usageMetadata);
-    console.log('\n---\n');
+		console.log("Answer:", response2.text);
+		console.log("\nToken usage:", response2.usageMetadata);
+		console.log("\n---\n");
 
-    // Example 3: Comparison with gemini-2.5-pro (more thinking capability)
-    console.log('Example 3: Using gemini-2.5-pro for Advanced Reasoning\n');
-    console.log('Prompt: Multi-step code optimization problem\n');
+		// Example 3: Comparison with gemini-2.5-pro (more thinking capability)
+		console.log("Example 3: Using gemini-2.5-pro for Advanced Reasoning\n");
+		console.log("Prompt: Multi-step code optimization problem\n");
 
-    const response3 = await ai.models.generateContent({
-      model: 'gemini-2.5-pro', // Pro model has better reasoning
-      contents: `
+		const response3 = await ai.models.generateContent({
+			model: "gemini-2.5-pro", // Pro model has better reasoning
+			contents: `
         Optimize this Python code for better performance:
 
         def find_duplicates(arr):
@@ -83,19 +86,18 @@ async function main() {
 
         Explain your optimization strategy step by step.
       `,
-      config: {
-        thinkingConfig: {
-          thinkingBudget: 8192
-        }
-      }
-    });
+			config: {
+				thinkingConfig: {
+					thinkingBudget: 8192,
+				},
+			},
+		});
 
-    console.log('Optimization:', response3.text);
-    console.log('\nToken usage:', response3.usageMetadata);
-
-  } catch (error: any) {
-    console.error('Error:', error.message);
-  }
+		console.log("Optimization:", response3.text);
+		console.log("\nToken usage:", response3.usageMetadata);
+	} catch (error: any) {
+		console.error("Error:", error.message);
+	}
 }
 
 /**

@@ -15,103 +15,98 @@
  *   Use gemini-2.5-flash or gemini-2.5-pro
  */
 
-import { GoogleGenAI, FunctionCallingConfigMode } from '@google/genai';
+import { FunctionCallingConfigMode, GoogleGenAI } from "@google/genai";
 
 async function main() {
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-  });
+	const ai = new GoogleGenAI({
+		apiKey: process.env.GEMINI_API_KEY,
+	});
 
-  try {
-    // Step 1: Define function declarations
-    const getCurrentWeather = {
-      name: 'get_current_weather',
-      description: 'Get the current weather for a specific location',
-      parametersJsonSchema: {
-        type: 'object',
-        properties: {
-          location: {
-            type: 'string',
-            description: 'The city name, e.g. San Francisco, Tokyo, London'
-          },
-          unit: {
-            type: 'string',
-            enum: ['celsius', 'fahrenheit'],
-            description: 'Temperature unit'
-          }
-        },
-        required: ['location']
-      }
-    };
+	try {
+		// Step 1: Define function declarations
+		const getCurrentWeather = {
+			name: "get_current_weather",
+			description: "Get the current weather for a specific location",
+			parametersJsonSchema: {
+				type: "object",
+				properties: {
+					location: {
+						type: "string",
+						description: "The city name, e.g. San Francisco, Tokyo, London",
+					},
+					unit: {
+						type: "string",
+						enum: ["celsius", "fahrenheit"],
+						description: "Temperature unit",
+					},
+				},
+				required: ["location"],
+			},
+		};
 
-    // Step 2: Make request with tools
-    console.log('User: What\'s the weather in Tokyo?\n');
+		// Step 2: Make request with tools
+		console.log("User: What's the weather in Tokyo?\n");
 
-    const response1 = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // ⚠️ NOT flash-lite!
-      contents: 'What\'s the weather in Tokyo?',
-      config: {
-        tools: [
-          { functionDeclarations: [getCurrentWeather] }
-        ]
-      }
-    });
+		const response1 = await ai.models.generateContent({
+			model: "gemini-2.5-flash", // ⚠️ NOT flash-lite!
+			contents: "What's the weather in Tokyo?",
+			config: {
+				tools: [{ functionDeclarations: [getCurrentWeather] }],
+			},
+		});
 
-    // Step 3: Check if model wants to call a function
-    const functionCall = response1.candidates[0]?.content?.parts?.find(
-      part => part.functionCall
-    )?.functionCall;
+		// Step 3: Check if model wants to call a function
+		const functionCall = response1.candidates[0]?.content?.parts?.find(
+			(part) => part.functionCall,
+		)?.functionCall;
 
-    if (!functionCall) {
-      console.log('Model response (no function call):', response1.text);
-      return;
-    }
+		if (!functionCall) {
+			console.log("Model response (no function call):", response1.text);
+			return;
+		}
 
-    console.log('Model wants to call function:');
-    console.log('- Function name:', functionCall.name);
-    console.log('- Arguments:', JSON.stringify(functionCall.args, null, 2));
-    console.log('');
+		console.log("Model wants to call function:");
+		console.log("- Function name:", functionCall.name);
+		console.log("- Arguments:", JSON.stringify(functionCall.args, null, 2));
+		console.log("");
 
-    // Step 4: Execute the function (your implementation)
-    console.log('Executing function...\n');
-    const weatherData = await getCurrentWeatherImpl(
-      functionCall.args.location,
-      functionCall.args.unit || 'celsius'
-    );
+		// Step 4: Execute the function (your implementation)
+		console.log("Executing function...\n");
+		const weatherData = await getCurrentWeatherImpl(
+			functionCall.args.location,
+			functionCall.args.unit || "celsius",
+		);
 
-    console.log('Function result:', JSON.stringify(weatherData, null, 2));
-    console.log('');
+		console.log("Function result:", JSON.stringify(weatherData, null, 2));
+		console.log("");
 
-    // Step 5: Send function result back to model
-    const response2 = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        { parts: [{ text: 'What\'s the weather in Tokyo?' }] },
-        response1.candidates[0].content, // Original assistant response with function call
-        {
-          parts: [
-            {
-              functionResponse: {
-                name: functionCall.name,
-                response: weatherData
-              }
-            }
-          ]
-        }
-      ],
-      config: {
-        tools: [
-          { functionDeclarations: [getCurrentWeather] }
-        ]
-      }
-    });
+		// Step 5: Send function result back to model
+		const response2 = await ai.models.generateContent({
+			model: "gemini-2.5-flash",
+			contents: [
+				{ parts: [{ text: "What's the weather in Tokyo?" }] },
+				response1.candidates[0].content, // Original assistant response with function call
+				{
+					parts: [
+						{
+							functionResponse: {
+								name: functionCall.name,
+								response: weatherData,
+							},
+						},
+					],
+				},
+			],
+			config: {
+				tools: [{ functionDeclarations: [getCurrentWeather] }],
+			},
+		});
 
-    console.log('Model final response:');
-    console.log(response2.text);
-
-  } catch (error: any) {
-    console.error('Error:', error.message);
-  }
+		console.log("Model final response:");
+		console.log(response2.text);
+	} catch (error: any) {
+		console.error("Error:", error.message);
+	}
 }
 
 /**
@@ -119,18 +114,18 @@ async function main() {
  * Replace with actual API call in production
  */
 async function getCurrentWeatherImpl(location: string, unit: string) {
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
+	// Simulate API call
+	await new Promise((resolve) => setTimeout(resolve, 500));
 
-  // Mock data
-  return {
-    location,
-    temperature: unit === 'celsius' ? 22 : 72,
-    unit,
-    conditions: 'Partly cloudy',
-    humidity: 65,
-    windSpeed: 10
-  };
+	// Mock data
+	return {
+		location,
+		temperature: unit === "celsius" ? 22 : 72,
+		unit,
+		conditions: "Partly cloudy",
+		humidity: 65,
+		windSpeed: 10,
+	};
 }
 
 /**

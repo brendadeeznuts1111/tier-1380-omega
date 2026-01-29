@@ -10,12 +10,12 @@
 // Context from the auth process, encrypted & stored in the auth token
 // and provided to the DurableMCP as this.props
 export type Props = {
-  id: string;      // Google user ID
-  email: string;   // User's email
-  name: string;    // User's display name
-  picture?: string; // Profile picture URL
-  accessToken: string; // Google access token (for Google API calls)
-  refreshToken?: string; // Google refresh token (for long-lived access)
+	id: string; // Google user ID
+	email: string; // User's email
+	name: string; // User's display name
+	picture?: string; // Profile picture URL
+	accessToken: string; // Google access token (for Google API calls)
+	refreshToken?: string; // Google refresh token (for long-lived access)
 };
 
 /**
@@ -28,35 +28,35 @@ export type Props = {
  * @param state - OAuth state token for CSRF protection
  */
 export function getUpstreamAuthorizeUrl({
-  upstream_url,
-  client_id,
-  scope,
-  redirect_uri,
-  state,
+	upstream_url,
+	client_id,
+	scope,
+	redirect_uri,
+	state,
 }: {
-  upstream_url: string;
-  client_id: string;
-  scope: string;
-  redirect_uri: string;
-  state?: string;
+	upstream_url: string;
+	client_id: string;
+	scope: string;
+	redirect_uri: string;
+	state?: string;
 }) {
-  const upstream = new URL(upstream_url);
-  upstream.searchParams.set('client_id', client_id);
-  upstream.searchParams.set('redirect_uri', redirect_uri);
-  upstream.searchParams.set('scope', scope);
-  if (state) upstream.searchParams.set('state', state);
-  upstream.searchParams.set('response_type', 'code');
-  upstream.searchParams.set('access_type', 'offline'); // For refresh tokens
-  upstream.searchParams.set('prompt', 'consent'); // Always show consent screen
-  return upstream.href;
+	const upstream = new URL(upstream_url);
+	upstream.searchParams.set("client_id", client_id);
+	upstream.searchParams.set("redirect_uri", redirect_uri);
+	upstream.searchParams.set("scope", scope);
+	if (state) upstream.searchParams.set("state", state);
+	upstream.searchParams.set("response_type", "code");
+	upstream.searchParams.set("access_type", "offline"); // For refresh tokens
+	upstream.searchParams.set("prompt", "consent"); // Always show consent screen
+	return upstream.href;
 }
 
 /**
  * Token response from Google OAuth
  */
 export type TokenResponse = {
-  accessToken: string;
-  refreshToken?: string; // Only returned on first authorization with access_type=offline
+	accessToken: string;
+	refreshToken?: string; // Only returned on first authorization with access_type=offline
 };
 
 /**
@@ -68,62 +68,68 @@ export type TokenResponse = {
  * Subsequent authorizations won't include it unless the user revokes access and reauthorizes.
  */
 export async function fetchUpstreamAuthToken({
-  client_id,
-  client_secret,
-  code,
-  redirect_uri,
-  upstream_url,
+	client_id,
+	client_secret,
+	code,
+	redirect_uri,
+	upstream_url,
 }: {
-  code: string | undefined;
-  upstream_url: string;
-  client_secret: string;
-  redirect_uri: string;
-  client_id: string;
+	code: string | undefined;
+	upstream_url: string;
+	client_secret: string;
+	redirect_uri: string;
+	client_id: string;
 }): Promise<[TokenResponse, null] | [null, Response]> {
-  if (!code) {
-    return [null, new Response('Missing code', { status: 400 })];
-  }
+	if (!code) {
+		return [null, new Response("Missing code", { status: 400 })];
+	}
 
-  const resp = await fetch(upstream_url, {
-    body: new URLSearchParams({
-      client_id,
-      client_secret,
-      code,
-      redirect_uri,
-      grant_type: 'authorization_code',
-    }).toString(),
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    method: 'POST',
-  });
+	const resp = await fetch(upstream_url, {
+		body: new URLSearchParams({
+			client_id,
+			client_secret,
+			code,
+			redirect_uri,
+			grant_type: "authorization_code",
+		}).toString(),
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		method: "POST",
+	});
 
-  if (!resp.ok) {
-    const errorText = await resp.text();
-    console.error('Google token exchange failed:', errorText);
-    return [null, new Response('Failed to fetch access token', { status: 500 })];
-  }
+	if (!resp.ok) {
+		const errorText = await resp.text();
+		console.error("Google token exchange failed:", errorText);
+		return [
+			null,
+			new Response("Failed to fetch access token", { status: 500 }),
+		];
+	}
 
-  const body = await resp.json() as {
-    access_token?: string;
-    refresh_token?: string;
-    error?: string;
-  };
+	const body = (await resp.json()) as {
+		access_token?: string;
+		refresh_token?: string;
+		error?: string;
+	};
 
-  if (body.error) {
-    console.error('Google OAuth error:', body.error);
-    return [null, new Response(`OAuth error: ${body.error}`, { status: 400 })];
-  }
+	if (body.error) {
+		console.error("Google OAuth error:", body.error);
+		return [null, new Response(`OAuth error: ${body.error}`, { status: 400 })];
+	}
 
-  const accessToken = body.access_token;
-  if (!accessToken) {
-    return [null, new Response('Missing access token', { status: 400 })];
-  }
+	const accessToken = body.access_token;
+	if (!accessToken) {
+		return [null, new Response("Missing access token", { status: 400 })];
+	}
 
-  return [{
-    accessToken,
-    refreshToken: body.refresh_token, // May be undefined for subsequent auths
-  }, null];
+	return [
+		{
+			accessToken,
+			refreshToken: body.refresh_token, // May be undefined for subsequent auths
+		},
+		null,
+	];
 }
 
 /**
@@ -133,28 +139,28 @@ export async function fetchUpstreamAuthToken({
  * @returns User object with id, email, name, picture or null on error
  */
 export async function fetchGoogleUserInfo(accessToken: string): Promise<{
-  id: string;
-  email: string;
-  name: string;
-  picture?: string;
+	id: string;
+	email: string;
+	name: string;
+	picture?: string;
 } | null> {
-  const resp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+	const resp = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+		headers: {
+			Authorization: `Bearer ${accessToken}`,
+		},
+	});
 
-  if (!resp.ok) {
-    console.error('Failed to fetch Google user info:', await resp.text());
-    return null;
-  }
+	if (!resp.ok) {
+		console.error("Failed to fetch Google user info:", await resp.text());
+		return null;
+	}
 
-  const user = await resp.json() as {
-    id: string;
-    email: string;
-    name: string;
-    picture?: string;
-  };
+	const user = (await resp.json()) as {
+		id: string;
+		email: string;
+		name: string;
+		picture?: string;
+	};
 
-  return user;
+	return user;
 }

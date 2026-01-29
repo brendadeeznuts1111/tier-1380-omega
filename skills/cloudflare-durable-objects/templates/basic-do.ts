@@ -8,7 +8,7 @@
  * - State persistence
  */
 
-import { DurableObject, DurableObjectState } from 'cloudflare:workers';
+import { DurableObject, type DurableObjectState } from 'cloudflare:workers';
 
 interface Env {
   COUNTER: DurableObjectNamespace<Counter>;

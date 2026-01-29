@@ -14,14 +14,14 @@
  * }
  */
 
-import { Hono } from 'hono'
+import { Hono } from "hono";
 
 // Type-safe environment bindings
 type Bindings = {
-	ASSETS: Fetcher
-}
+	ASSETS: Fetcher;
+};
 
-const app = new Hono<{ Bindings: Bindings }>()
+const app = new Hono<{ Bindings: Bindings }>();
 
 /**
  * API Routes
@@ -29,42 +29,42 @@ const app = new Hono<{ Bindings: Bindings }>()
  * These routes are handled by the Worker BEFORE static assets due to
  * "run_worker_first": ["/api/*"] in wrangler.jsonc
  */
-app.get('/api/hello', (c) => {
+app.get("/api/hello", (c) => {
 	return c.json({
-		message: 'Hello from Cloudflare Workers!',
+		message: "Hello from Cloudflare Workers!",
 		timestamp: new Date().toISOString(),
-	})
-})
+	});
+});
 
-app.get('/api/data', (c) => {
+app.get("/api/data", (c) => {
 	return c.json({
 		items: [
-			{ id: 1, name: 'Item 1', description: 'First item' },
-			{ id: 2, name: 'Item 2', description: 'Second item' },
-			{ id: 3, name: 'Item 3', description: 'Third item' },
+			{ id: 1, name: "Item 1", description: "First item" },
+			{ id: 2, name: "Item 2", description: "Second item" },
+			{ id: 3, name: "Item 3", description: "Third item" },
 		],
 		count: 3,
-	})
-})
+	});
+});
 
-app.post('/api/echo', async (c) => {
-	const body = await c.req.json()
+app.post("/api/echo", async (c) => {
+	const body = await c.req.json();
 	return c.json({
 		received: body,
 		method: c.req.method,
-	})
-})
+	});
+});
 
 /**
  * Health check endpoint
  */
-app.get('/api/health', (c) => {
+app.get("/api/health", (c) => {
 	return c.json({
-		status: 'ok',
-		version: '1.0.0',
-		environment: c.env ? 'production' : 'development',
-	})
-})
+		status: "ok",
+		version: "1.0.0",
+		environment: c.env ? "production" : "development",
+	});
+});
 
 /**
  * Fallback to Static Assets
@@ -72,13 +72,13 @@ app.get('/api/health', (c) => {
  * Any route not matched above will be served from the public/ directory
  * thanks to Workers Static Assets
  */
-app.all('*', (c) => {
+app.all("*", (c) => {
 	// Let Cloudflare Workers handle static assets automatically
-	return c.env.ASSETS.fetch(c.req.raw)
-})
+	return c.env.ASSETS.fetch(c.req.raw);
+});
 
 /**
  * Export the Hono app directly (ES Module format)
  * This is the correct pattern for Cloudflare Workers with Hono + Vite
  */
-export default app
+export default app;

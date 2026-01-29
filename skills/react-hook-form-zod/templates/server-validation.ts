@@ -160,11 +160,11 @@ app.post('/api/register', async (req, res) => {
   }
 })
 
+import { zValidator } from '@hono/zod-validator'
 /**
  * SERVER-SIDE VALIDATION (Cloudflare Workers + Hono Example)
  */
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
 
 const app = new Hono()
 
@@ -195,11 +195,11 @@ app.post('/api/register', zValidator('json', userRegistrationSchema), async (c) 
   })
 })
 
+import { zodResolver } from '@hookform/resolvers/zod'
 /**
  * CLIENT-SIDE INTEGRATION WITH SERVER ERRORS
  */
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 function RegistrationForm() {
   const {
@@ -271,18 +271,16 @@ function RegistrationForm() {
       <input type="email" {...register('email')} />
       {errors.email && <span>{errors.email.message}</span>}
 
-      <input type="password" {...register('password')} />
+      <input type="password" ...register('password')/>
       {errors.password && <span>{errors.password.message}</span>}
 
-      <input type="number" {...register('age', { valueAsNumber: true })} />
-      {errors.age && <span>{errors.age.message}</span>}
+      <input type="number" ...register('age', valueAsNumber: true )/>errors.age && <span>{errors.age.message}</span>}
 
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Registering...' : 'Register'}
       </button>
     </form>
   )
-}
 
 /**
  * Helper functions (implement according to your database)

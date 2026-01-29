@@ -8,44 +8,47 @@
  * search parameters, cookies, and headers in Next.js 16.
  */
 
-import { cookies, headers, draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
+import { cookies, draftMode, headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 // ============================================================================
 // Example 1: Page with Async Params
 // ============================================================================
 
 interface PageProps {
-  params: Promise<{ slug: string }>
-  searchParams: Promise<{ q?: string; page?: string }>
+	params: Promise<{ slug: string }>;
+	searchParams: Promise<{ q?: string; page?: string }>;
 }
 
-export default async function BlogPostPage({ params, searchParams }: PageProps) {
-  // ✅ Await params and searchParams in Next.js 16
-  const { slug } = await params
-  const { q, page } = await searchParams
+export default async function BlogPostPage({
+	params,
+	searchParams,
+}: PageProps) {
+	// ✅ Await params and searchParams in Next.js 16
+	const { slug } = await params;
+	const { q, page } = await searchParams;
 
-  // Fetch post data
-  const post = await fetch(`https://api.example.com/posts/${slug}`)
-    .then(r => r.json())
-    .catch(() => null)
+	// Fetch post data
+	const post = await fetch(`https://api.example.com/posts/${slug}`)
+		.then((r) => r.json())
+		.catch(() => null);
 
-  if (!post) {
-    notFound()
-  }
+	if (!post) {
+		notFound();
+	}
 
-  return (
-    <article>
-      <h1>{post.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+	return (
+		<article>
+			<h1>{post.title}</h1>
+			<div dangerouslySetInnerHTML={{ __html: post.content }} />
 
-      {/* Show search query if present */}
-      {q && <p>Search query: {q}</p>}
+			{/* Show search query if present */}
+			{q && <p>Search query: {q}</p>}
 
-      {/* Show page number if present */}
-      {page && <p>Page: {page}</p>}
-    </article>
-  )
+			{/* Show page number if present */}
+			{page && <p>Page: {page}</p>}
+		</article>
+	);
 }
 
 // ============================================================================
@@ -53,22 +56,22 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
 // ============================================================================
 
 interface LayoutProps {
-  children: React.ReactNode
-  params: Promise<{ category: string }>
+	children: React.ReactNode;
+	params: Promise<{ category: string }>;
 }
 
 export async function ProductLayout({ children, params }: LayoutProps) {
-  // ✅ Await params in layouts too
-  const { category } = await params
+	// ✅ Await params in layouts too
+	const { category } = await params;
 
-  return (
-    <div>
-      <nav>
-        <h2>Category: {category}</h2>
-      </nav>
-      <main>{children}</main>
-    </div>
-  )
+	return (
+		<div>
+			<nav>
+				<h2>Category: {category}</h2>
+			</nav>
+			<main>{children}</main>
+		</div>
+	);
 }
 
 // ============================================================================
@@ -76,23 +79,24 @@ export async function ProductLayout({ children, params }: LayoutProps) {
 // ============================================================================
 
 export async function UserGreeting() {
-  // ✅ Await cookies() in Next.js 16
-  const cookieStore = await cookies()
-  const userId = cookieStore.get('userId')?.value
-  const theme = cookieStore.get('theme')?.value || 'light'
+	// ✅ Await cookies() in Next.js 16
+	const cookieStore = await cookies();
+	const userId = cookieStore.get("userId")?.value;
+	const theme = cookieStore.get("theme")?.value || "light";
 
-  if (!userId) {
-    return <p>Welcome, Guest!</p>
-  }
+	if (!userId) {
+		return <p>Welcome, Guest!</p>;
+	}
 
-  const user = await fetch(`https://api.example.com/users/${userId}`)
-    .then(r => r.json())
+	const user = await fetch(`https://api.example.com/users/${userId}`).then(
+		(r) => r.json(),
+	);
 
-  return (
-    <div data-theme={theme}>
-      <p>Welcome back, {user.name}!</p>
-    </div>
-  )
+	return (
+		<div data-theme={theme}>
+			<p>Welcome back, {user.name}!</p>
+		</div>
+	);
 }
 
 // ============================================================================
@@ -100,19 +104,19 @@ export async function UserGreeting() {
 // ============================================================================
 
 export async function RequestInfo() {
-  // ✅ Await headers() in Next.js 16
-  const headersList = await headers()
-  const userAgent = headersList.get('user-agent') || 'Unknown'
-  const referer = headersList.get('referer') || 'Direct'
-  const ip = headersList.get('x-forwarded-for') || 'Unknown'
+	// ✅ Await headers() in Next.js 16
+	const headersList = await headers();
+	const userAgent = headersList.get("user-agent") || "Unknown";
+	const referer = headersList.get("referer") || "Direct";
+	const ip = headersList.get("x-forwarded-for") || "Unknown";
 
-  return (
-    <div>
-      <p>User Agent: {userAgent}</p>
-      <p>Referrer: {referer}</p>
-      <p>IP: {ip}</p>
-    </div>
-  )
+	return (
+		<div>
+			<p>User Agent: {userAgent}</p>
+			<p>Referrer: {referer}</p>
+			<p>IP: {ip}</p>
+		</div>
+	);
 }
 
 // ============================================================================
@@ -120,43 +124,46 @@ export async function RequestInfo() {
 // ============================================================================
 
 export async function DraftBanner() {
-  // ✅ Await draftMode() in Next.js 16
-  const { isEnabled } = await draftMode()
+	// ✅ Await draftMode() in Next.js 16
+	const { isEnabled } = await draftMode();
 
-  if (!isEnabled) {
-    return null
-  }
+	if (!isEnabled) {
+		return null;
+	}
 
-  return (
-    <div style={{ background: 'yellow', padding: '1rem' }}>
-      <p>🚧 Draft Mode Enabled</p>
-      <a href="/api/disable-draft">Exit Draft Mode</a>
-    </div>
-  )
+	return (
+		<div style={{ background: "yellow", padding: "1rem" }}>
+			<p>🚧 Draft Mode Enabled</p>
+			<a href="/api/disable-draft">Exit Draft Mode</a>
+		</div>
+	);
 }
 
 // ============================================================================
 // Example 6: Generate Metadata with Async Params
 // ============================================================================
 
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  // ✅ Await params in generateMetadata
-  const { slug } = await params
+export async function generateMetadata({
+	params,
+}: PageProps): Promise<Metadata> {
+	// ✅ Await params in generateMetadata
+	const { slug } = await params;
 
-  const post = await fetch(`https://api.example.com/posts/${slug}`)
-    .then(r => r.json())
+	const post = await fetch(`https://api.example.com/posts/${slug}`).then((r) =>
+		r.json(),
+	);
 
-  return {
-    title: post.title,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      images: [post.coverImage],
-    },
-  }
+	return {
+		title: post.title,
+		description: post.excerpt,
+		openGraph: {
+			title: post.title,
+			description: post.excerpt,
+			images: [post.coverImage],
+		},
+	};
 }
 
 // ============================================================================
@@ -164,12 +171,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // ============================================================================
 
 export async function generateStaticParams() {
-  const posts = await fetch('https://api.example.com/posts')
-    .then(r => r.json())
+	const posts = await fetch("https://api.example.com/posts").then((r) =>
+		r.json(),
+	);
 
-  return posts.map((post: { slug: string }) => ({
-    slug: post.slug,
-  }))
+	return posts.map((post: { slug: string }) => ({
+		slug: post.slug,
+	}));
 }
 
 // ============================================================================
@@ -178,33 +186,34 @@ export async function generateStaticParams() {
 
 // File: app/api/posts/[id]/route.ts
 
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+	request: Request,
+	{ params }: { params: Promise<{ id: string }> },
 ) {
-  // ✅ Await params in route handlers
-  const { id } = await params
+	// ✅ Await params in route handlers
+	const { id } = await params;
 
-  const post = await fetch(`https://api.example.com/posts/${id}`)
-    .then(r => r.json())
+	const post = await fetch(`https://api.example.com/posts/${id}`).then((r) =>
+		r.json(),
+	);
 
-  return NextResponse.json(post)
+	return NextResponse.json(post);
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+	request: Request,
+	{ params }: { params: Promise<{ id: string }> },
 ) {
-  // ✅ Await params in route handlers
-  const { id } = await params
+	// ✅ Await params in route handlers
+	const { id } = await params;
 
-  await fetch(`https://api.example.com/posts/${id}`, {
-    method: 'DELETE',
-  })
+	await fetch(`https://api.example.com/posts/${id}`, {
+		method: "DELETE",
+	});
 
-  return NextResponse.json({ message: 'Post deleted' })
+	return NextResponse.json({ message: "Post deleted" });
 }
 
 // ============================================================================
@@ -242,14 +251,14 @@ export async function MyComponent() {
 // ============================================================================
 
 // Correct types for Next.js 16:
-type Params<T = Record<string, string>> = Promise<T>
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+type Params<T = Record<string, string>> = Promise<T>;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 // Usage:
 type ProductPageProps = {
-  params: Params<{ id: string }>
-  searchParams: SearchParams
-}
+	params: Params<{ id: string }>;
+	searchParams: SearchParams;
+};
 
 // ============================================================================
 // Codemod (Automatic Migration)

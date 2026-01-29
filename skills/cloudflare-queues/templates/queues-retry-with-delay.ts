@@ -16,153 +16,161 @@
  */
 
 type Env = {
-  DB: D1Database;
-  API_KEY: string;
+	DB: D1Database;
+	API_KEY: string;
 };
 
 export default {
-  async queue(
-    batch: MessageBatch,
-    env: Env,
-    ctx: ExecutionContext
-  ): Promise<void> {
-    console.log(`Processing batch of ${batch.messages.length} messages`);
+	async queue(
+		batch: MessageBatch,
+		env: Env,
+		ctx: ExecutionContext,
+	): Promise<void> {
+		console.log(`Processing batch of ${batch.messages.length} messages`);
 
-    for (const message of batch.messages) {
-      try {
-        await processWithRetry(message, env);
-        message.ack();
-      } catch (error) {
-        await handleError(message, error);
-      }
-    }
-  },
+		for (const message of batch.messages) {
+			try {
+				await processWithRetry(message, env);
+				message.ack();
+			} catch (error) {
+				await handleError(message, error);
+			}
+		}
+	},
 };
 
 /**
  * Process message with smart retry logic
  */
 async function processWithRetry(message: Message, env: Env) {
-  const { type, data } = message.body;
+	const { type, data } = message.body;
 
-  console.log(`Processing ${type} (attempt ${message.attempts})`);
+	console.log(`Processing ${type} (attempt ${message.attempts})`);
 
-  switch (type) {
-    case 'call-api':
-      await callExternalAPI(data, message.attempts);
-      break;
+	switch (type) {
+		case "call-api":
+			await callExternalAPI(data, message.attempts);
+			break;
 
-    case 'process-webhook':
-      await processWebhook(data);
-      break;
+		case "process-webhook":
+			await processWebhook(data);
+			break;
 
-    default:
-      throw new Error(`Unknown message type: ${type}`);
-  }
+		default:
+			throw new Error(`Unknown message type: ${type}`);
+	}
 }
 
 /**
  * Call external API with retry handling
  */
 async function callExternalAPI(data: any, attempts: number) {
-  const response = await fetch(data.url, {
-    method: data.method || 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...data.headers,
-    },
-    body: JSON.stringify(data.payload),
-  });
+	const response = await fetch(data.url, {
+		method: data.method || "POST",
+		headers: {
+			"Content-Type": "application/json",
+			...data.headers,
+		},
+		body: JSON.stringify(data.payload),
+	});
 
-  // Handle different response codes
-  if (response.ok) {
-    console.log(`✅ API call successful`);
-    return await response.json();
-  }
+	// Handle different response codes
+	if (response.ok) {
+		console.log(`✅ API call successful`);
+		return await response.json();
+	}
 
-  // Rate limiting
-  if (response.status === 429) {
-    const retryAfter = response.headers.get('Retry-After');
-    const delaySeconds = retryAfter ? parseInt(retryAfter) : undefined;
+	// Rate limiting
+	if (response.status === 429) {
+		const retryAfter = response.headers.get("Retry-After");
+		const delaySeconds = retryAfter ? parseInt(retryAfter) : undefined;
 
-    throw new RateLimitError('Rate limited', delaySeconds, attempts);
-  }
+		throw new RateLimitError("Rate limited", delaySeconds, attempts);
+	}
 
-  // Server errors (500-599) - retry
-  if (response.status >= 500) {
-    throw new ServerError(`Server error: ${response.status}`, attempts);
-  }
+	// Server errors (500-599) - retry
+	if (response.status >= 500) {
+		throw new ServerError(`Server error: ${response.status}`, attempts);
+	}
 
-  // Client errors (400-499) - don't retry
-  if (response.status >= 400) {
-    const error = await response.text();
-    throw new ClientError(`Client error: ${error}`);
-  }
+	// Client errors (400-499) - don't retry
+	if (response.status >= 400) {
+		const error = await response.text();
+		throw new ClientError(`Client error: ${error}`);
+	}
 
-  throw new Error(`Unexpected response: ${response.status}`);
+	throw new Error(`Unexpected response: ${response.status}`);
 }
 
 /**
  * Process webhook with timeout
  */
 async function processWebhook(data: any) {
-  // Simulate processing
-  await new Promise(resolve => setTimeout(resolve, 1000));
+	// Simulate processing
+	await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  console.log(`Webhook processed: ${data.id}`);
+	console.log(`Webhook processed: ${data.id}`);
 }
 
 /**
  * Handle errors with appropriate retry strategy
  */
 async function handleError(message: Message, error: any) {
-  console.error(`Error processing message ${message.id}:`, error);
+	console.error(`Error processing message ${message.id}:`, error);
 
-  // Rate limit error - use suggested delay or exponential backoff
-  if (error instanceof RateLimitError) {
-    const delaySeconds = error.suggestedDelay || calculateExponentialBackoff(
-      message.attempts,
-      60, // Base delay: 1 minute
-      3600 // Max delay: 1 hour
-    );
+	// Rate limit error - use suggested delay or exponential backoff
+	if (error instanceof RateLimitError) {
+		const delaySeconds =
+			error.suggestedDelay ||
+			calculateExponentialBackoff(
+				message.attempts,
+				60, // Base delay: 1 minute
+				3600, // Max delay: 1 hour
+			);
 
-    console.log(`⏰ Rate limited. Retrying in ${delaySeconds}s (attempt ${message.attempts})`);
+		console.log(
+			`⏰ Rate limited. Retrying in ${delaySeconds}s (attempt ${message.attempts})`,
+		);
 
-    message.retry({ delaySeconds });
-    return;
-  }
+		message.retry({ delaySeconds });
+		return;
+	}
 
-  // Server error - exponential backoff
-  if (error instanceof ServerError) {
-    const delaySeconds = calculateExponentialBackoff(
-      message.attempts,
-      30, // Base delay: 30 seconds
-      1800 // Max delay: 30 minutes
-    );
+	// Server error - exponential backoff
+	if (error instanceof ServerError) {
+		const delaySeconds = calculateExponentialBackoff(
+			message.attempts,
+			30, // Base delay: 30 seconds
+			1800, // Max delay: 30 minutes
+		);
 
-    console.log(`🔄 Server error. Retrying in ${delaySeconds}s (attempt ${message.attempts})`);
+		console.log(
+			`🔄 Server error. Retrying in ${delaySeconds}s (attempt ${message.attempts})`,
+		);
 
-    message.retry({ delaySeconds });
-    return;
-  }
+		message.retry({ delaySeconds });
+		return;
+	}
 
-  // Client error - don't retry (will go to DLQ)
-  if (error instanceof ClientError) {
-    console.error(`❌ Client error. Not retrying: ${error.message}`);
-    // Don't call ack() or retry() - will fail and go to DLQ
-    return;
-  }
+	// Client error - don't retry (will go to DLQ)
+	if (error instanceof ClientError) {
+		console.error(`❌ Client error. Not retrying: ${error.message}`);
+		// Don't call ack() or retry() - will fail and go to DLQ
+		return;
+	}
 
-  // Unknown error - retry with exponential backoff
-  const delaySeconds = calculateExponentialBackoff(
-    message.attempts,
-    60, // Base delay: 1 minute
-    7200 // Max delay: 2 hours
-  );
+	// Unknown error - retry with exponential backoff
+	const delaySeconds = calculateExponentialBackoff(
+		message.attempts,
+		60, // Base delay: 1 minute
+		7200, // Max delay: 2 hours
+	);
 
-  console.log(`⚠️ Unknown error. Retrying in ${delaySeconds}s (attempt ${message.attempts})`);
+	console.log(
+		`⚠️ Unknown error. Retrying in ${delaySeconds}s (attempt ${message.attempts})`,
+	);
 
-  message.retry({ delaySeconds });
+	message.retry({ delaySeconds });
 }
 
 /**
@@ -180,12 +188,12 @@ async function handleError(message: Message, error: any) {
  * - Attempt 7+: 3600s (1 hour) - capped
  */
 function calculateExponentialBackoff(
-  attempts: number,
-  baseDelay: number,
-  maxDelay: number
+	attempts: number,
+	baseDelay: number,
+	maxDelay: number,
 ): number {
-  const delay = baseDelay * Math.pow(2, attempts - 1);
-  return Math.min(delay, maxDelay);
+	const delay = baseDelay * 2 ** (attempts - 1);
+	return Math.min(delay, maxDelay);
 }
 
 /**
@@ -194,17 +202,17 @@ function calculateExponentialBackoff(
  * Adds randomness to delay to spread out retries
  */
 function calculateJitteredBackoff(
-  attempts: number,
-  baseDelay: number,
-  maxDelay: number
+	attempts: number,
+	baseDelay: number,
+	maxDelay: number,
 ): number {
-  const exponentialDelay = baseDelay * Math.pow(2, attempts - 1);
-  const delay = Math.min(exponentialDelay, maxDelay);
+	const exponentialDelay = baseDelay * 2 ** (attempts - 1);
+	const delay = Math.min(exponentialDelay, maxDelay);
 
-  // Add jitter: ±25% randomness
-  const jitter = delay * 0.25 * (Math.random() * 2 - 1);
+	// Add jitter: ±25% randomness
+	const jitter = delay * 0.25 * (Math.random() * 2 - 1);
 
-  return Math.floor(delay + jitter);
+	return Math.floor(delay + jitter);
 }
 
 // ============================================================================
@@ -212,30 +220,30 @@ function calculateJitteredBackoff(
 // ============================================================================
 
 class RateLimitError extends Error {
-  suggestedDelay?: number;
-  attempts: number;
+	suggestedDelay?: number;
+	attempts: number;
 
-  constructor(message: string, suggestedDelay?: number, attempts: number = 1) {
-    super(message);
-    this.name = 'RateLimitError';
-    this.suggestedDelay = suggestedDelay;
-    this.attempts = attempts;
-  }
+	constructor(message: string, suggestedDelay?: number, attempts: number = 1) {
+		super(message);
+		this.name = "RateLimitError";
+		this.suggestedDelay = suggestedDelay;
+		this.attempts = attempts;
+	}
 }
 
 class ServerError extends Error {
-  attempts: number;
+	attempts: number;
 
-  constructor(message: string, attempts: number = 1) {
-    super(message);
-    this.name = 'ServerError';
-    this.attempts = attempts;
-  }
+	constructor(message: string, attempts: number = 1) {
+		super(message);
+		this.name = "ServerError";
+		this.attempts = attempts;
+	}
 }
 
 class ClientError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ClientError';
-  }
+	constructor(message: string) {
+		super(message);
+		this.name = "ClientError";
+	}
 }

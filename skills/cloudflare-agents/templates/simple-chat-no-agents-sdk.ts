@@ -37,52 +37,52 @@
 // BACKEND: Cloudflare Worker with AI SDK
 // ============================================================================
 
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 interface Env {
-  OPENAI_API_KEY: string;
+	OPENAI_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
 // Enable CORS for frontend
-app.use('*', cors());
+app.use("*", cors());
 
 // Chat endpoint - handles streaming responses
-app.post('/api/chat', async (c) => {
-  const { messages } = await c.req.json();
+app.post("/api/chat", async (c) => {
+	const { messages } = await c.req.json();
 
-  // Validate input
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return c.json({ error: 'Messages array required' }, 400);
-  }
+	// Validate input
+	if (!Array.isArray(messages) || messages.length === 0) {
+		return c.json({ error: "Messages array required" }, 400);
+	}
 
-  // Stream AI response using Vercel AI SDK
-  const result = streamText({
-    model: openai('gpt-4o-mini'),
-    messages,
-    system: 'You are a helpful assistant.',
-    temperature: 0.7,
-    maxTokens: 1000,
-  });
+	// Stream AI response using Vercel AI SDK
+	const result = streamText({
+		model: openai("gpt-4o-mini"),
+		messages,
+		system: "You are a helpful assistant.",
+		temperature: 0.7,
+		maxTokens: 1000,
+	});
 
-  // Return SSE stream (automatic streaming handled by AI SDK)
-  return result.toTextStreamResponse();
+	// Return SSE stream (automatic streaming handled by AI SDK)
+	return result.toTextStreamResponse();
 });
 
 // Optional: Add completion endpoint for non-chat use cases
-app.post('/api/completion', async (c) => {
-  const { prompt } = await c.req.json();
+app.post("/api/completion", async (c) => {
+	const { prompt } = await c.req.json();
 
-  const result = streamText({
-    model: openai('gpt-4o-mini'),
-    prompt,
-  });
+	const result = streamText({
+		model: openai("gpt-4o-mini"),
+		prompt,
+	});
 
-  return result.toTextStreamResponse();
+	return result.toTextStreamResponse();
 });
 
 export default app;

@@ -1,7 +1,7 @@
 // Simple Rate Limiting with Vercel KV
 // Protect API routes from abuse with sliding window and fixed window patterns
 
-import { kv } from '@vercel/kv';
+import { kv } from "@vercel/kv";
 
 // ============================================================================
 // FIXED WINDOW RATE LIMITING (Simple, Good Enough for Most Cases)
@@ -17,33 +17,35 @@ import { kv } from '@vercel/kv';
  * @returns Object with allowed status and remaining count
  */
 export async function fixedWindowRateLimit(
-  identifier: string,
-  limit: number,
-  windowSeconds: number
+	identifier: string,
+	limit: number,
+	windowSeconds: number,
 ): Promise<{
-  allowed: boolean;
-  remaining: number;
-  resetAt: Date;
+	allowed: boolean;
+	remaining: number;
+	resetAt: Date;
 }> {
-  const key = `ratelimit:${identifier}`;
+	const key = `ratelimit:${identifier}`;
 
-  // Increment counter
-  const current = await kv.incr(key);
+	// Increment counter
+	const current = await kv.incr(key);
 
-  // If first request in window, set TTL
-  if (current === 1) {
-    await kv.expire(key, windowSeconds);
-  }
+	// If first request in window, set TTL
+	if (current === 1) {
+		await kv.expire(key, windowSeconds);
+	}
 
-  // Get TTL to calculate reset time
-  const ttl = await kv.ttl(key);
-  const resetAt = new Date(Date.now() + (ttl > 0 ? ttl * 1000 : windowSeconds * 1000));
+	// Get TTL to calculate reset time
+	const ttl = await kv.ttl(key);
+	const resetAt = new Date(
+		Date.now() + (ttl > 0 ? ttl * 1000 : windowSeconds * 1000),
+	);
 
-  return {
-    allowed: current <= limit,
-    remaining: Math.max(0, limit - current),
-    resetAt,
-  };
+	return {
+		allowed: current <= limit,
+		remaining: Math.max(0, limit - current),
+		resetAt,
+	};
 }
 
 // ============================================================================
@@ -59,49 +61,50 @@ export async function fixedWindowRateLimit(
  * @param windowSeconds - Window duration in seconds
  */
 export async function slidingWindowRateLimit(
-  identifier: string,
-  limit: number,
-  windowSeconds: number
+	identifier: string,
+	limit: number,
+	windowSeconds: number,
 ): Promise<{
-  allowed: boolean;
-  remaining: number;
-  resetAt: Date;
+	allowed: boolean;
+	remaining: number;
+	resetAt: Date;
 }> {
-  const key = `ratelimit:sliding:${identifier}`;
-  const now = Date.now();
-  const windowStart = now - (windowSeconds * 1000);
+	const key = `ratelimit:sliding:${identifier}`;
+	const now = Date.now();
+	const windowStart = now - windowSeconds * 1000;
 
-  // Remove old entries outside the window
-  await kv.zremrangebyscore(key, 0, windowStart);
+	// Remove old entries outside the window
+	await kv.zremrangebyscore(key, 0, windowStart);
 
-  // Count requests in current window
-  const count = await kv.zcard(key);
+	// Count requests in current window
+	const count = await kv.zcard(key);
 
-  if (count < limit) {
-    // Add current request with timestamp as score
-    await kv.zadd(key, { score: now, member: `${now}-${Math.random()}` });
+	if (count < limit) {
+		// Add current request with timestamp as score
+		await kv.zadd(key, { score: now, member: `${now}-${Math.random()}` });
 
-    // Set expiration for cleanup
-    await kv.expire(key, windowSeconds * 2);
+		// Set expiration for cleanup
+		await kv.expire(key, windowSeconds * 2);
 
-    return {
-      allowed: true,
-      remaining: limit - count - 1,
-      resetAt: new Date(now + (windowSeconds * 1000)),
-    };
-  }
+		return {
+			allowed: true,
+			remaining: limit - count - 1,
+			resetAt: new Date(now + windowSeconds * 1000),
+		};
+	}
 
-  // Get oldest entry to calculate when it expires
-  const oldest = await kv.zrange(key, 0, 0, { withScores: true });
-  const resetAt = oldest.length > 0
-    ? new Date(oldest[0].score + (windowSeconds * 1000))
-    : new Date(now + (windowSeconds * 1000));
+	// Get oldest entry to calculate when it expires
+	const oldest = await kv.zrange(key, 0, 0, { withScores: true });
+	const resetAt =
+		oldest.length > 0
+			? new Date(oldest[0].score + windowSeconds * 1000)
+			: new Date(now + windowSeconds * 1000);
 
-  return {
-    allowed: false,
-    remaining: 0,
-    resetAt,
-  };
+	return {
+		allowed: false,
+		remaining: 0,
+		resetAt,
+	};
 }
 
 // ============================================================================
@@ -113,50 +116,55 @@ export async function slidingWindowRateLimit(
  * Use with standard Next.js route handlers
  */
 export async function withRateLimit<T>(
-  request: Request,
-  handler: () => Promise<T>,
-  options: {
-    identifier?: string;  // Defaults to IP from headers
-    limit?: number;       // Default: 10
-    windowSeconds?: number; // Default: 60 (1 minute)
-    algorithm?: 'fixed' | 'sliding'; // Default: 'fixed'
-  } = {}
+	request: Request,
+	handler: () => Promise<T>,
+	options: {
+		identifier?: string; // Defaults to IP from headers
+		limit?: number; // Default: 10
+		windowSeconds?: number; // Default: 60 (1 minute)
+		algorithm?: "fixed" | "sliding"; // Default: 'fixed'
+	} = {},
 ): Promise<Response | T> {
-  const {
-    limit = 10,
-    windowSeconds = 60,
-    algorithm = 'fixed',
-  } = options;
+	const { limit = 10, windowSeconds = 60, algorithm = "fixed" } = options;
 
-  // Get identifier (IP address by default)
-  const identifier = options.identifier ||
-    request.headers.get('x-forwarded-for') ||
-    request.headers.get('x-real-ip') ||
-    'unknown';
+	// Get identifier (IP address by default)
+	const identifier =
+		options.identifier ||
+		request.headers.get("x-forwarded-for") ||
+		request.headers.get("x-real-ip") ||
+		"unknown";
 
-  // Apply rate limit
-  const result = algorithm === 'sliding'
-    ? await slidingWindowRateLimit(identifier, limit, windowSeconds)
-    : await fixedWindowRateLimit(identifier, limit, windowSeconds);
+	// Apply rate limit
+	const result =
+		algorithm === "sliding"
+			? await slidingWindowRateLimit(identifier, limit, windowSeconds)
+			: await fixedWindowRateLimit(identifier, limit, windowSeconds);
 
-  if (!result.allowed) {
-    return new Response(JSON.stringify({
-      error: 'Too many requests',
-      resetAt: result.resetAt.toISOString(),
-    }), {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RateLimit-Limit': limit.toString(),
-        'X-RateLimit-Remaining': '0',
-        'X-RateLimit-Reset': Math.floor(result.resetAt.getTime() / 1000).toString(),
-        'Retry-After': Math.ceil((result.resetAt.getTime() - Date.now()) / 1000).toString(),
-      },
-    });
-  }
+	if (!result.allowed) {
+		return new Response(
+			JSON.stringify({
+				error: "Too many requests",
+				resetAt: result.resetAt.toISOString(),
+			}),
+			{
+				status: 429,
+				headers: {
+					"Content-Type": "application/json",
+					"X-RateLimit-Limit": limit.toString(),
+					"X-RateLimit-Remaining": "0",
+					"X-RateLimit-Reset": Math.floor(
+						result.resetAt.getTime() / 1000,
+					).toString(),
+					"Retry-After": Math.ceil(
+						(result.resetAt.getTime() - Date.now()) / 1000,
+					).toString(),
+				},
+			},
+		);
+	}
 
-  // Call handler
-  return handler();
+	// Call handler
+	return handler();
 }
 
 // ============================================================================
@@ -168,31 +176,36 @@ export async function withRateLimit<T>(
  * Increments count and returns new value
  */
 export async function incrementViewCount(resourceId: string): Promise<number> {
-  const key = `views:${resourceId}`;
-  const count = await kv.incr(key);
-  return count;
+	const key = `views:${resourceId}`;
+	const count = await kv.incr(key);
+	return count;
 }
 
 /**
  * Get view count without incrementing
  */
 export async function getViewCount(resourceId: string): Promise<number> {
-  const key = `views:${resourceId}`;
-  const count = await kv.get<number>(key);
-  return count || 0;
+	const key = `views:${resourceId}`;
+	const count = await kv.get<number>(key);
+	return count || 0;
 }
 
 /**
  * Get view counts for multiple resources
  */
-export async function getViewCounts(resourceIds: string[]): Promise<Record<string, number>> {
-  const keys = resourceIds.map(id => `views:${id}`);
-  const counts = await kv.mget<number[]>(...keys);
+export async function getViewCounts(
+	resourceIds: string[],
+): Promise<Record<string, number>> {
+	const keys = resourceIds.map((id) => `views:${id}`);
+	const counts = await kv.mget<number[]>(...keys);
 
-  return resourceIds.reduce((acc, id, index) => {
-    acc[id] = counts[index] || 0;
-    return acc;
-  }, {} as Record<string, number>);
+	return resourceIds.reduce(
+		(acc, id, index) => {
+			acc[id] = counts[index] || 0;
+			return acc;
+		},
+		{} as Record<string, number>,
+	);
 }
 
 // ============================================================================

@@ -14,123 +14,136 @@
  */
 
 interface Env {
-  GEMINI_API_KEY: string;
+	GEMINI_API_KEY: string;
 }
 
 interface EmbeddingRequest {
-  content: {
-    parts: Array<{ text: string }>;
-  };
-  taskType?: string;
-  outputDimensionality?: number;
+	content: {
+		parts: Array<{ text: string }>;
+	};
+	taskType?: string;
+	outputDimensionality?: number;
 }
 
 interface EmbeddingResponse {
-  embedding: {
-    values: number[];
-  };
+	embedding: {
+		values: number[];
+	};
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // CORS headers for browser access
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    };
+	async fetch(request: Request, env: Env): Promise<Response> {
+		// CORS headers for browser access
+		const corsHeaders = {
+			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type",
+		};
 
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
+		// Handle CORS preflight
+		if (request.method === "OPTIONS") {
+			return new Response(null, { headers: corsHeaders });
+		}
 
-    try {
-      // Get text from query param or request body
-      const url = new URL(request.url);
-      let text: string;
+		try {
+			// Get text from query param or request body
+			const url = new URL(request.url);
+			let text: string;
 
-      if (request.method === 'POST') {
-        const body = await request.json<{ text: string }>();
-        text = body.text;
-      } else {
-        text = url.searchParams.get('text') || 'What is the meaning of life?';
-      }
+			if (request.method === "POST") {
+				const body = await request.json<{ text: string }>();
+				text = body.text;
+			} else {
+				text = url.searchParams.get("text") || "What is the meaning of life?";
+			}
 
-      console.log(`Generating embedding for: "${text}"`);
+			console.log(`Generating embedding for: "${text}"`);
 
-      // Prepare request
-      const embeddingRequest: EmbeddingRequest = {
-        content: {
-          parts: [{ text }]
-        },
-        taskType: 'SEMANTIC_SIMILARITY',
-        outputDimensionality: 768
-      };
+			// Prepare request
+			const embeddingRequest: EmbeddingRequest = {
+				content: {
+					parts: [{ text }],
+				},
+				taskType: "SEMANTIC_SIMILARITY",
+				outputDimensionality: 768,
+			};
 
-      // Call Gemini API
-      const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent',
-        {
-          method: 'POST',
-          headers: {
-            'x-goog-api-key': env.GEMINI_API_KEY,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(embeddingRequest)
-        }
-      );
+			// Call Gemini API
+			const response = await fetch(
+				"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+				{
+					method: "POST",
+					headers: {
+						"x-goog-api-key": env.GEMINI_API_KEY,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(embeddingRequest),
+				},
+			);
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Gemini API error: ${response.status} - ${error}`);
-      }
+			if (!response.ok) {
+				const error = await response.text();
+				throw new Error(`Gemini API error: ${response.status} - ${error}`);
+			}
 
-      const data = await response.json<EmbeddingResponse>();
-      const embedding = data.embedding.values;
+			const data = await response.json<EmbeddingResponse>();
+			const embedding = data.embedding.values;
 
-      // Calculate vector magnitude
-      const magnitude = Math.sqrt(
-        embedding.reduce((sum, v) => sum + v * v, 0)
-      );
+			// Calculate vector magnitude
+			const magnitude = Math.sqrt(embedding.reduce((sum, v) => sum + v * v, 0));
 
-      // Return formatted response
-      return new Response(JSON.stringify({
-        success: true,
-        text,
-        embedding: {
-          dimensions: embedding.length,
-          magnitude: magnitude.toFixed(4),
-          firstValues: embedding.slice(0, 10).map(v => parseFloat(v.toFixed(4))),
-          fullVector: embedding
-        }
-      }, null, 2), {
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        }
-      });
+			// Return formatted response
+			return new Response(
+				JSON.stringify(
+					{
+						success: true,
+						text,
+						embedding: {
+							dimensions: embedding.length,
+							magnitude: magnitude.toFixed(4),
+							firstValues: embedding
+								.slice(0, 10)
+								.map((v) => parseFloat(v.toFixed(4))),
+							fullVector: embedding,
+						},
+					},
+					null,
+					2,
+				),
+				{
+					headers: {
+						"Content-Type": "application/json",
+						...corsHeaders,
+					},
+				},
+			);
+		} catch (error: any) {
+			console.error("Error:", error.message);
 
-    } catch (error: any) {
-      console.error('Error:', error.message);
-
-      return new Response(JSON.stringify({
-        success: false,
-        error: error.message,
-        hint: error.message.includes('401')
-          ? 'Check GEMINI_API_KEY secret is set'
-          : error.message.includes('429')
-          ? 'Rate limit exceeded (Free tier: 100 RPM)'
-          : 'Check error message for details'
-      }, null, 2), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        }
-      });
-    }
-  }
+			return new Response(
+				JSON.stringify(
+					{
+						success: false,
+						error: error.message,
+						hint: error.message.includes("401")
+							? "Check GEMINI_API_KEY secret is set"
+							: error.message.includes("429")
+								? "Rate limit exceeded (Free tier: 100 RPM)"
+								: "Check error message for details",
+					},
+					null,
+					2,
+				),
+				{
+					status: 500,
+					headers: {
+						"Content-Type": "application/json",
+						...corsHeaders,
+					},
+				},
+			);
+		}
+	},
 };
 
 /**

@@ -1,7 +1,7 @@
-import { defineConfig } from 'tinacms'
-import { blogPostCollection } from './collections/blog-post'
-import { docPageCollection } from './collections/doc-page'
-import { authorCollection } from './collections/author'
+import { defineConfig } from "tinacms";
+import { authorCollection } from "./collections/author";
+import { blogPostCollection } from "./collections/blog-post";
+import { docPageCollection } from "./collections/doc-page";
 
 /**
  * TinaCMS Configuration for Next.js App Router
@@ -22,67 +22,67 @@ import { authorCollection } from './collections/author'
 
 // Get Git branch from environment
 const branch =
-  process.env.GITHUB_BRANCH ||
-  process.env.VERCEL_GIT_COMMIT_REF ||
-  process.env.HEAD ||
-  'main'
+	process.env.GITHUB_BRANCH ||
+	process.env.VERCEL_GIT_COMMIT_REF ||
+	process.env.HEAD ||
+	"main";
 
 export default defineConfig({
-  // Git branch to use
-  branch,
+	// Git branch to use
+	branch,
 
-  // TinaCloud credentials (get from https://app.tina.io)
-  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
-  token: process.env.TINA_TOKEN,
+	// TinaCloud credentials (get from https://app.tina.io)
+	clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
+	token: process.env.TINA_TOKEN,
 
-  // Build configuration
-  build: {
-    outputFolder: 'admin',      // Where admin UI is built
-    publicFolder: 'public',     // Your public assets folder
-  },
+	// Build configuration
+	build: {
+		outputFolder: "admin", // Where admin UI is built
+		publicFolder: "public", // Your public assets folder
+	},
 
-  // Media configuration
-  media: {
-    tina: {
-      mediaRoot: 'uploads',     // Subfolder for uploads
-      publicFolder: 'public',   // Where files are stored
-    },
-  },
+	// Media configuration
+	media: {
+		tina: {
+			mediaRoot: "uploads", // Subfolder for uploads
+			publicFolder: "public", // Where files are stored
+		},
+	},
 
-  // Content schema
-  schema: {
-    collections: [
-      // Import your collections here
-      blogPostCollection,
-      authorCollection,
-      docPageCollection,
+	// Content schema
+	schema: {
+		collections: [
+			// Import your collections here
+			blogPostCollection,
+			authorCollection,
+			docPageCollection,
 
-      // Or define collections inline:
-      // {
-      //   name: 'post',
-      //   label: 'Blog Posts',
-      //   path: 'content/posts',
-      //   format: 'mdx',
-      //   fields: [
-      //     {
-      //       type: 'string',
-      //       name: 'title',
-      //       label: 'Title',
-      //       isTitle: true,
-      //       required: true,
-      //     },
-      //     {
-      //       type: 'rich-text',
-      //       name: 'body',
-      //       label: 'Body',
-      //       isBody: true,
-      //     },
-      //   ],
-      // },
-    ],
-  },
+			// Or define collections inline:
+			// {
+			//   name: 'post',
+			//   label: 'Blog Posts',
+			//   path: 'content/posts',
+			//   format: 'mdx',
+			//   fields: [
+			//     {
+			//       type: 'string',
+			//       name: 'title',
+			//       label: 'Title',
+			//       isTitle: true,
+			//       required: true,
+			//     },
+			//     {
+			//       type: 'rich-text',
+			//       name: 'body',
+			//       label: 'Body',
+			//       isBody: true,
+			//     },
+			//   ],
+			// },
+		],
+	},
 
-  // Optional: Self-hosted backend configuration
-  // Uncomment if using self-hosted backend
-  // contentApiUrlOverride: '/api/tina/gql',
-})
+	// Optional: Self-hosted backend configuration
+	// Uncomment if using self-hosted backend
+	// contentApiUrlOverride: '/api/tina/gql',
+});

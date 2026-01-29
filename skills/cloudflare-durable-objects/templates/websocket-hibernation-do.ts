@@ -9,7 +9,7 @@
  * - State restoration in constructor after hibernation
  */
 
-import { DurableObject, DurableObjectState } from 'cloudflare:workers';
+import { DurableObject, type DurableObjectState } from 'cloudflare:workers';
 
 interface Env {
   CHAT_ROOM: DurableObjectNamespace<ChatRoom>;

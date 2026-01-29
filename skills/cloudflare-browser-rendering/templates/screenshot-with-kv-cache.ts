@@ -4,82 +4,82 @@
 import puppeteer from "@cloudflare/puppeteer";
 
 interface Env {
-  MYBROWSER: Fetcher;
-  SCREENSHOT_CACHE: KVNamespace;
+	MYBROWSER: Fetcher;
+	SCREENSHOT_CACHE: KVNamespace;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get("url");
-    const refresh = searchParams.get("refresh") === "true";
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const { searchParams } = new URL(request.url);
+		const url = searchParams.get("url");
+		const refresh = searchParams.get("refresh") === "true";
 
-    if (!url) {
-      return new Response("Missing ?url parameter", { status: 400 });
-    }
+		if (!url) {
+			return new Response("Missing ?url parameter", { status: 400 });
+		}
 
-    const normalizedUrl = new URL(url).toString();
+		const normalizedUrl = new URL(url).toString();
 
-    // Check cache (unless refresh requested)
-    if (!refresh) {
-      const cached = await env.SCREENSHOT_CACHE.get(normalizedUrl, {
-        type: "arrayBuffer",
-      });
+		// Check cache (unless refresh requested)
+		if (!refresh) {
+			const cached = await env.SCREENSHOT_CACHE.get(normalizedUrl, {
+				type: "arrayBuffer",
+			});
 
-      if (cached) {
-        return new Response(cached, {
-          headers: {
-            "content-type": "image/png",
-            "x-cache": "HIT",
-            "cache-control": "public, max-age=3600",
-          },
-        });
-      }
-    }
+			if (cached) {
+				return new Response(cached, {
+					headers: {
+						"content-type": "image/png",
+						"x-cache": "HIT",
+						"cache-control": "public, max-age=3600",
+					},
+				});
+			}
+		}
 
-    // Generate screenshot
-    const browser = await puppeteer.launch(env.MYBROWSER);
+		// Generate screenshot
+		const browser = await puppeteer.launch(env.MYBROWSER);
 
-    try {
-      const page = await browser.newPage();
+		try {
+			const page = await browser.newPage();
 
-      await page.goto(normalizedUrl, {
-        waitUntil: "networkidle0",
-        timeout: 30000,
-      });
+			await page.goto(normalizedUrl, {
+				waitUntil: "networkidle0",
+				timeout: 30000,
+			});
 
-      const screenshot = await page.screenshot({
-        fullPage: true,
-        type: "png",
-      });
+			const screenshot = await page.screenshot({
+				fullPage: true,
+				type: "png",
+			});
 
-      await browser.close();
+			await browser.close();
 
-      // Cache for 24 hours
-      await env.SCREENSHOT_CACHE.put(normalizedUrl, screenshot, {
-        expirationTtl: 60 * 60 * 24, // 24 hours
-      });
+			// Cache for 24 hours
+			await env.SCREENSHOT_CACHE.put(normalizedUrl, screenshot, {
+				expirationTtl: 60 * 60 * 24, // 24 hours
+			});
 
-      return new Response(screenshot, {
-        headers: {
-          "content-type": "image/png",
-          "x-cache": "MISS",
-          "cache-control": "public, max-age=3600",
-        },
-      });
-    } catch (error) {
-      await browser.close();
-      return new Response(
-        JSON.stringify({
-          error: error instanceof Error ? error.message : "Screenshot failed",
-        }),
-        {
-          status: 500,
-          headers: { "content-type": "application/json" },
-        }
-      );
-    }
-  },
+			return new Response(screenshot, {
+				headers: {
+					"content-type": "image/png",
+					"x-cache": "MISS",
+					"cache-control": "public, max-age=3600",
+				},
+			});
+		} catch (error) {
+			await browser.close();
+			return new Response(
+				JSON.stringify({
+					error: error instanceof Error ? error.message : "Screenshot failed",
+				}),
+				{
+					status: 500,
+					headers: { "content-type": "application/json" },
+				},
+			);
+		}
+	},
 };
 
 /**

@@ -6,23 +6,23 @@
  * when tokens expire or need consent.
  */
 
-import { useMsal } from "@azure/msal-react";
 import {
-  InteractionRequiredAuthError,
-  SilentRequest,
+	InteractionRequiredAuthError,
+	type SilentRequest,
 } from "@azure/msal-browser";
+import { useMsal } from "@azure/msal-react";
 import { useCallback, useState } from "react";
 import { apiRequest } from "./msal-config";
 
 interface UseApiTokenResult {
-  /** Get an access token for API calls */
-  getAccessToken: () => Promise<string | null>;
-  /** Whether a token acquisition is in progress */
-  isLoading: boolean;
-  /** Any error that occurred during token acquisition */
-  error: Error | null;
-  /** Clear any stored error */
-  clearError: () => void;
+	/** Get an access token for API calls */
+	getAccessToken: () => Promise<string | null>;
+	/** Whether a token acquisition is in progress */
+	isLoading: boolean;
+	/** Any error that occurred during token acquisition */
+	error: Error | null;
+	/** Clear any stored error */
+	clearError: () => void;
 }
 
 /**
@@ -54,73 +54,71 @@ interface UseApiTokenResult {
  * ```
  */
 export function useApiToken(): UseApiTokenResult {
-  const { instance, accounts } = useMsal();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+	const { instance, accounts } = useMsal();
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<Error | null>(null);
 
-  const getAccessToken = useCallback(async (): Promise<string | null> => {
-    // Check if user is signed in
-    if (accounts.length === 0) {
-      setError(new Error("No user signed in"));
-      return null;
-    }
+	const getAccessToken = useCallback(async (): Promise<string | null> => {
+		// Check if user is signed in
+		if (accounts.length === 0) {
+			setError(new Error("No user signed in"));
+			return null;
+		}
 
-    setIsLoading(true);
-    setError(null);
+		setIsLoading(true);
+		setError(null);
 
-    const request: SilentRequest = {
-      ...apiRequest,
-      account: accounts[0],
-    };
+		const request: SilentRequest = {
+			...apiRequest,
+			account: accounts[0],
+		};
 
-    try {
-      // Try silent token acquisition first
-      // This uses cached tokens or refresh tokens
-      const response = await instance.acquireTokenSilent(request);
-      return response.accessToken;
-    } catch (err) {
-      // Handle interaction required errors
-      // These occur when:
-      // - Refresh token expired (AADSTS700084 - 24hr limit for SPAs)
-      // - Consent needed for new scopes
-      // - MFA required
-      // - Password changed
-      if (err instanceof InteractionRequiredAuthError) {
-        try {
-          // Fall back to interactive login
-          // Using redirect instead of popup for better mobile support
-          await instance.acquireTokenRedirect(request);
-          // This will redirect, so we won't reach here
-          return null;
-        } catch (redirectError) {
-          const error = new Error(
-            `Interactive login failed: ${redirectError}`
-          );
-          setError(error);
-          return null;
-        }
-      }
+		try {
+			// Try silent token acquisition first
+			// This uses cached tokens or refresh tokens
+			const response = await instance.acquireTokenSilent(request);
+			return response.accessToken;
+		} catch (err) {
+			// Handle interaction required errors
+			// These occur when:
+			// - Refresh token expired (AADSTS700084 - 24hr limit for SPAs)
+			// - Consent needed for new scopes
+			// - MFA required
+			// - Password changed
+			if (err instanceof InteractionRequiredAuthError) {
+				try {
+					// Fall back to interactive login
+					// Using redirect instead of popup for better mobile support
+					await instance.acquireTokenRedirect(request);
+					// This will redirect, so we won't reach here
+					return null;
+				} catch (redirectError) {
+					const error = new Error(`Interactive login failed: ${redirectError}`);
+					setError(error);
+					return null;
+				}
+			}
 
-      // Other errors (network, configuration, etc.)
-      const error =
-        err instanceof Error ? err : new Error("Failed to acquire token");
-      setError(error);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [instance, accounts]);
+			// Other errors (network, configuration, etc.)
+			const error =
+				err instanceof Error ? err : new Error("Failed to acquire token");
+			setError(error);
+			return null;
+		} finally {
+			setIsLoading(false);
+		}
+	}, [instance, accounts]);
 
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+	const clearError = useCallback(() => {
+		setError(null);
+	}, []);
 
-  return {
-    getAccessToken,
-    isLoading,
-    error,
-    clearError,
-  };
+	return {
+		getAccessToken,
+		isLoading,
+		error,
+		clearError,
+	};
 }
 
 /**
@@ -140,26 +138,26 @@ export function useApiToken(): UseApiTokenResult {
  * ```
  */
 export function useAuthenticatedFetch(
-  getAccessToken: () => Promise<string | null>
+	getAccessToken: () => Promise<string | null>,
 ) {
-  return useCallback(
-    async (url: string, options: RequestInit = {}): Promise<Response> => {
-      const token = await getAccessToken();
+	return useCallback(
+		async (url: string, options: RequestInit = {}): Promise<Response> => {
+			const token = await getAccessToken();
 
-      if (!token) {
-        throw new Error("Failed to acquire access token");
-      }
+			if (!token) {
+				throw new Error("Failed to acquire access token");
+			}
 
-      const headers = new Headers(options.headers);
-      headers.set("Authorization", `Bearer ${token}`);
+			const headers = new Headers(options.headers);
+			headers.set("Authorization", `Bearer ${token}`);
 
-      return fetch(url, {
-        ...options,
-        headers,
-      });
-    },
-    [getAccessToken]
-  );
+			return fetch(url, {
+				...options,
+				headers,
+			});
+		},
+		[getAccessToken],
+	);
 }
 
 /**
@@ -180,55 +178,55 @@ export function useAuthenticatedFetch(
  * ```
  */
 export function useAuthenticatedQuery<T>(
-  url: string,
-  options?: RequestInit
+	url: string,
+	options?: RequestInit,
 ): {
-  data: T | null;
-  isLoading: boolean;
-  error: Error | null;
-  refetch: () => void;
+	data: T | null;
+	isLoading: boolean;
+	error: Error | null;
+	refetch: () => void;
 } {
-  const { getAccessToken } = useApiToken();
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [fetchTrigger, setFetchTrigger] = useState(0);
+	const { getAccessToken } = useApiToken();
+	const [data, setData] = useState<T | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<Error | null>(null);
+	const [fetchTrigger, setFetchTrigger] = useState(0);
 
-  const refetch = useCallback(() => {
-    setFetchTrigger((prev) => prev + 1);
-  }, []);
+	const refetch = useCallback(() => {
+		setFetchTrigger((prev) => prev + 1);
+	}, []);
 
-  // Fetch data when component mounts or refetch is called
-  useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+	// Fetch data when component mounts or refetch is called
+	useCallback(async () => {
+		setIsLoading(true);
+		setError(null);
 
-    try {
-      const token = await getAccessToken();
-      if (!token) {
-        throw new Error("Failed to acquire access token");
-      }
+		try {
+			const token = await getAccessToken();
+			if (!token) {
+				throw new Error("Failed to acquire access token");
+			}
 
-      const headers = new Headers(options?.headers);
-      headers.set("Authorization", `Bearer ${token}`);
+			const headers = new Headers(options?.headers);
+			headers.set("Authorization", `Bearer ${token}`);
 
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
+			const response = await fetch(url, {
+				...options,
+				headers,
+			});
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+			}
 
-      const result = (await response.json()) as T;
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch data"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [url, options, getAccessToken, fetchTrigger]);
+			const result = (await response.json()) as T;
+			setData(result);
+		} catch (err) {
+			setError(err instanceof Error ? err : new Error("Failed to fetch data"));
+		} finally {
+			setIsLoading(false);
+		}
+	}, [url, options, getAccessToken, fetchTrigger]);
 
-  return { data, isLoading, error, refetch };
+	return { data, isLoading, error, refetch };
 }

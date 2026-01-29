@@ -14,201 +14,207 @@
  */
 
 interface Env {
-  GEMINI_API_KEY: string;
+	GEMINI_API_KEY: string;
 }
 
 interface ChatMessage {
-  role: 'user' | 'model';
-  parts: Array<{ text: string }>;
+	role: "user" | "model";
+	parts: Array<{ text: string }>;
 }
 
 export default {
-  /**
-   * Main request handler
-   */
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // CORS headers
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
+	/**
+	 * Main request handler
+	 */
+	async fetch(request: Request, env: Env): Promise<Response> {
+		// CORS headers
+		const corsHeaders = {
+			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type",
+		};
 
-    // Handle preflight
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
+		// Handle preflight
+		if (request.method === "OPTIONS") {
+			return new Response(null, { headers: corsHeaders });
+		}
 
-    const url = new URL(request.url);
+		const url = new URL(request.url);
 
-    try {
-      // Route: POST /api/chat (non-streaming)
-      if (url.pathname === '/api/chat' && request.method === 'POST') {
-        return await handleChat(request, env, corsHeaders);
-      }
+		try {
+			// Route: POST /api/chat (non-streaming)
+			if (url.pathname === "/api/chat" && request.method === "POST") {
+				return await handleChat(request, env, corsHeaders);
+			}
 
-      // Route: POST /api/chat/stream (streaming)
-      if (url.pathname === '/api/chat/stream' && request.method === 'POST') {
-        return await handleChatStream(request, env, corsHeaders);
-      }
+			// Route: POST /api/chat/stream (streaming)
+			if (url.pathname === "/api/chat/stream" && request.method === "POST") {
+				return await handleChatStream(request, env, corsHeaders);
+			}
 
-      // Route: GET / (health check)
-      if (url.pathname === '/' && request.method === 'GET') {
-        return new Response(
-          JSON.stringify({ status: 'ok', service: 'Gemini API Worker' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+			// Route: GET / (health check)
+			if (url.pathname === "/" && request.method === "GET") {
+				return new Response(
+					JSON.stringify({ status: "ok", service: "Gemini API Worker" }),
+					{ headers: { ...corsHeaders, "Content-Type": "application/json" } },
+				);
+			}
 
-      // 404 for unknown routes
-      return new Response('Not Found', { status: 404, headers: corsHeaders });
-
-    } catch (error: any) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-  }
+			// 404 for unknown routes
+			return new Response("Not Found", { status: 404, headers: corsHeaders });
+		} catch (error: any) {
+			return new Response(JSON.stringify({ error: error.message }), {
+				status: 500,
+				headers: { ...corsHeaders, "Content-Type": "application/json" },
+			});
+		}
+	},
 };
 
 /**
  * Handle non-streaming chat request
  */
-async function handleChat(request: Request, env: Env, corsHeaders: any): Promise<Response> {
-  const { message, history = [] } = await request.json() as {
-    message: string;
-    history?: ChatMessage[];
-  };
+async function handleChat(
+	request: Request,
+	env: Env,
+	corsHeaders: any,
+): Promise<Response> {
+	const { message, history = [] } = (await request.json()) as {
+		message: string;
+		history?: ChatMessage[];
+	};
 
-  // Build contents array with history
-  const contents: ChatMessage[] = [
-    ...history,
-    { role: 'user', parts: [{ text: message }] }
-  ];
+	// Build contents array with history
+	const contents: ChatMessage[] = [
+		...history,
+		{ role: "user", parts: [{ text: message }] },
+	];
 
-  // Call Gemini API
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': env.GEMINI_API_KEY,
-      },
-      body: JSON.stringify({ contents }),
-    }
-  );
+	// Call Gemini API
+	const response = await fetch(
+		`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+		{
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"x-goog-api-key": env.GEMINI_API_KEY,
+			},
+			body: JSON.stringify({ contents }),
+		},
+	);
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || 'Gemini API error');
-  }
+	if (!response.ok) {
+		const errorData = await response.json();
+		throw new Error(errorData.error?.message || "Gemini API error");
+	}
 
-  const data = await response.json();
-  const assistantReply = data.candidates[0]?.content?.parts[0]?.text;
+	const data = await response.json();
+	const assistantReply = data.candidates[0]?.content?.parts[0]?.text;
 
-  // Return response with updated history
-  return new Response(
-    JSON.stringify({
-      reply: assistantReply,
-      history: [
-        ...history,
-        { role: 'user', parts: [{ text: message }] },
-        { role: 'model', parts: [{ text: assistantReply }] }
-      ],
-      usage: data.usageMetadata
-    }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
+	// Return response with updated history
+	return new Response(
+		JSON.stringify({
+			reply: assistantReply,
+			history: [
+				...history,
+				{ role: "user", parts: [{ text: message }] },
+				{ role: "model", parts: [{ text: assistantReply }] },
+			],
+			usage: data.usageMetadata,
+		}),
+		{ headers: { ...corsHeaders, "Content-Type": "application/json" } },
+	);
 }
 
 /**
  * Handle streaming chat request
  */
-async function handleChatStream(request: Request, env: Env, corsHeaders: any): Promise<Response> {
-  const { message, history = [] } = await request.json() as {
-    message: string;
-    history?: ChatMessage[];
-  };
+async function handleChatStream(
+	request: Request,
+	env: Env,
+	corsHeaders: any,
+): Promise<Response> {
+	const { message, history = [] } = (await request.json()) as {
+		message: string;
+		history?: ChatMessage[];
+	};
 
-  const contents: ChatMessage[] = [
-    ...history,
-    { role: 'user', parts: [{ text: message }] }
-  ];
+	const contents: ChatMessage[] = [
+		...history,
+		{ role: "user", parts: [{ text: message }] },
+	];
 
-  // Create a TransformStream to stream to client
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  const encoder = new TextEncoder();
+	// Create a TransformStream to stream to client
+	const { readable, writable } = new TransformStream();
+	const writer = writable.getWriter();
+	const encoder = new TextEncoder();
 
-  // Start streaming in background
-  (async () => {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': env.GEMINI_API_KEY,
-          },
-          body: JSON.stringify({ contents }),
-        }
-      );
+	// Start streaming in background
+	(async () => {
+		try {
+			const response = await fetch(
+				`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"x-goog-api-key": env.GEMINI_API_KEY,
+					},
+					body: JSON.stringify({ contents }),
+				},
+			);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
 
-      if (!response.body) {
-        throw new Error('Response body is null');
-      }
+			if (!response.body) {
+				throw new Error("Response body is null");
+			}
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split("\n");
+				buffer = lines.pop() || "";
 
-        for (const line of lines) {
-          if (line.trim() === '' || line.startsWith('data: [DONE]')) continue;
-          if (!line.startsWith('data: ')) continue;
+				for (const line of lines) {
+					if (line.trim() === "" || line.startsWith("data: [DONE]")) continue;
+					if (!line.startsWith("data: ")) continue;
 
-          try {
-            const data = JSON.parse(line.slice(6));
-            const text = data.candidates[0]?.content?.parts[0]?.text;
+					try {
+						const data = JSON.parse(line.slice(6));
+						const text = data.candidates[0]?.content?.parts[0]?.text;
 
-            if (text) {
-              await writer.write(encoder.encode(text));
-            }
-          } catch (e) {
-            // Skip invalid JSON
-          }
-        }
-      }
+						if (text) {
+							await writer.write(encoder.encode(text));
+						}
+					} catch (e) {
+						// Skip invalid JSON
+					}
+				}
+			}
 
-      await writer.close();
+			await writer.close();
+		} catch (error: any) {
+			await writer.write(encoder.encode(`\n\nError: ${error.message}`));
+			await writer.close();
+		}
+	})();
 
-    } catch (error: any) {
-      await writer.write(encoder.encode(`\n\nError: ${error.message}`));
-      await writer.close();
-    }
-  })();
-
-  return new Response(readable, {
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
-    },
-  });
+	return new Response(readable, {
+		headers: {
+			...corsHeaders,
+			"Content-Type": "text/plain; charset=utf-8",
+			"Transfer-Encoding": "chunked",
+		},
+	});
 }
 
 /**

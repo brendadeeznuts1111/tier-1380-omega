@@ -1,138 +1,138 @@
 {
-  "type": "tension",
-  "environment": "staging",
-  "count": 10,
-  "generated_at": "2026-01-29T17:56:23.753Z",
-  "profiles": [
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709383752_tension-md-1769709383752.md",
-      "filename": "1769709383752_tension-md-1769709383752.md",
-      "path": "tension/1380/staging/1769709383752_tension-md-1769709383752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709383752,
-        "format": "md",
-        "benchmark": "tension-benchmark-1"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709384752_tension-md-1769709384752.md",
-      "filename": "1769709384752_tension-md-1769709384752.md",
-      "path": "tension/1380/staging/1769709384752_tension-md-1769709384752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709384752,
-        "format": "md",
-        "benchmark": "tension-benchmark-2"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709385752_tension-md-1769709385752.md",
-      "filename": "1769709385752_tension-md-1769709385752.md",
-      "path": "tension/1380/staging/1769709385752_tension-md-1769709385752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709385752,
-        "format": "md",
-        "benchmark": "tension-benchmark-3"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709386752_tension-md-1769709386752.md",
-      "filename": "1769709386752_tension-md-1769709386752.md",
-      "path": "tension/1380/staging/1769709386752_tension-md-1769709386752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709386752,
-        "format": "md",
-        "benchmark": "tension-benchmark-4"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709387752_tension-md-1769709387752.md",
-      "filename": "1769709387752_tension-md-1769709387752.md",
-      "path": "tension/1380/staging/1769709387752_tension-md-1769709387752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709387752,
-        "format": "md",
-        "benchmark": "tension-benchmark-5"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709388752_tension-md-1769709388752.md",
-      "filename": "1769709388752_tension-md-1769709388752.md",
-      "path": "tension/1380/staging/1769709388752_tension-md-1769709388752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709388752,
-        "format": "md",
-        "benchmark": "tension-benchmark-6"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709389752_tension-md-1769709389752.md",
-      "filename": "1769709389752_tension-md-1769709389752.md",
-      "path": "tension/1380/staging/1769709389752_tension-md-1769709389752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709389752,
-        "format": "md",
-        "benchmark": "tension-benchmark-7"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709390752_tension-md-1769709390752.md",
-      "filename": "1769709390752_tension-md-1769709390752.md",
-      "path": "tension/1380/staging/1769709390752_tension-md-1769709390752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709390752,
-        "format": "md",
-        "benchmark": "tension-benchmark-8"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709391752_tension-md-1769709391752.md",
-      "filename": "1769709391752_tension-md-1769709391752.md",
-      "path": "tension/1380/staging/1769709391752_tension-md-1769709391752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709391752,
-        "format": "md",
-        "benchmark": "tension-benchmark-9"
-      }
-    },
-    {
-      "url": "https://profiles.factory-wager.com/tension/1380/staging/1769709392752_tension-md-1769709392752.md",
-      "filename": "1769709392752_tension-md-1769709392752.md",
-      "path": "tension/1380/staging/1769709392752_tension-md-1769709392752.md",
-      "metadata": {
-        "type": "tension",
-        "tier": "1380",
-        "environment": "staging",
-        "timestamp": 1769709392752,
-        "format": "md",
-        "benchmark": "tension-benchmark-10"
-      }
-    }
-  ]
+	"type": "tension",
+	"environment": "staging",
+	"count": 10,
+	"generated_at": "2026-01-29T17:56:23.753Z",
+	"profiles": [
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709383752_tension-md-1769709383752.md",
+			"filename": "1769709383752_tension-md-1769709383752.md",
+			"path": "tension/1380/staging/1769709383752_tension-md-1769709383752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709383752,
+				"format": "md",
+				"benchmark": "tension-benchmark-1"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709384752_tension-md-1769709384752.md",
+			"filename": "1769709384752_tension-md-1769709384752.md",
+			"path": "tension/1380/staging/1769709384752_tension-md-1769709384752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709384752,
+				"format": "md",
+				"benchmark": "tension-benchmark-2"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709385752_tension-md-1769709385752.md",
+			"filename": "1769709385752_tension-md-1769709385752.md",
+			"path": "tension/1380/staging/1769709385752_tension-md-1769709385752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709385752,
+				"format": "md",
+				"benchmark": "tension-benchmark-3"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709386752_tension-md-1769709386752.md",
+			"filename": "1769709386752_tension-md-1769709386752.md",
+			"path": "tension/1380/staging/1769709386752_tension-md-1769709386752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709386752,
+				"format": "md",
+				"benchmark": "tension-benchmark-4"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709387752_tension-md-1769709387752.md",
+			"filename": "1769709387752_tension-md-1769709387752.md",
+			"path": "tension/1380/staging/1769709387752_tension-md-1769709387752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709387752,
+				"format": "md",
+				"benchmark": "tension-benchmark-5"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709388752_tension-md-1769709388752.md",
+			"filename": "1769709388752_tension-md-1769709388752.md",
+			"path": "tension/1380/staging/1769709388752_tension-md-1769709388752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709388752,
+				"format": "md",
+				"benchmark": "tension-benchmark-6"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709389752_tension-md-1769709389752.md",
+			"filename": "1769709389752_tension-md-1769709389752.md",
+			"path": "tension/1380/staging/1769709389752_tension-md-1769709389752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709389752,
+				"format": "md",
+				"benchmark": "tension-benchmark-7"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709390752_tension-md-1769709390752.md",
+			"filename": "1769709390752_tension-md-1769709390752.md",
+			"path": "tension/1380/staging/1769709390752_tension-md-1769709390752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709390752,
+				"format": "md",
+				"benchmark": "tension-benchmark-8"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709391752_tension-md-1769709391752.md",
+			"filename": "1769709391752_tension-md-1769709391752.md",
+			"path": "tension/1380/staging/1769709391752_tension-md-1769709391752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709391752,
+				"format": "md",
+				"benchmark": "tension-benchmark-9"
+			}
+		},
+		{
+			"url": "https://profiles.factory-wager.com/tension/1380/staging/1769709392752_tension-md-1769709392752.md",
+			"filename": "1769709392752_tension-md-1769709392752.md",
+			"path": "tension/1380/staging/1769709392752_tension-md-1769709392752.md",
+			"metadata": {
+				"type": "tension",
+				"tier": "1380",
+				"environment": "staging",
+				"timestamp": 1769709392752,
+				"format": "md",
+				"benchmark": "tension-benchmark-10"
+			}
+		}
+	]
 }

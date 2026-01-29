@@ -16,164 +16,170 @@
  */
 
 interface Env {
-  IMAGES_ACCOUNT_ID: string;
-  IMAGES_API_TOKEN: string;
+	IMAGES_ACCOUNT_ID: string;
+	IMAGES_API_TOKEN: string;
 }
 
 interface DirectUploadOptions {
-  requireSignedURLs?: boolean;
-  metadata?: Record<string, string>;
-  expiry?: string; // ISO 8601 format (default: 30min, max: 6hr)
-  id?: string; // Custom ID (optional)
+	requireSignedURLs?: boolean;
+	metadata?: Record<string, string>;
+	expiry?: string; // ISO 8601 format (default: 30min, max: 6hr)
+	id?: string; // Custom ID (optional)
 }
 
 interface DirectUploadResponse {
-  success: boolean;
-  result?: {
-    id: string; // Image ID that will be uploaded
-    uploadURL: string; // One-time upload URL for frontend
-  };
-  errors?: Array<{ code: number; message: string }>;
+	success: boolean;
+	result?: {
+		id: string; // Image ID that will be uploaded
+		uploadURL: string; // One-time upload URL for frontend
+	};
+	errors?: Array<{ code: number; message: string }>;
 }
 
 /**
  * Generate one-time upload URL
  */
 export async function generateUploadURL(
-  options: DirectUploadOptions = {},
-  env: Env
+	options: DirectUploadOptions = {},
+	env: Env,
 ): Promise<DirectUploadResponse> {
-  const requestBody: Record<string, unknown> = {};
+	const requestBody: Record<string, unknown> = {};
 
-  // Optional: Require signed URLs for private images
-  if (options.requireSignedURLs !== undefined) {
-    requestBody.requireSignedURLs = options.requireSignedURLs;
-  }
+	// Optional: Require signed URLs for private images
+	if (options.requireSignedURLs !== undefined) {
+		requestBody.requireSignedURLs = options.requireSignedURLs;
+	}
 
-  // Optional: Metadata (attached to image, not visible to end users)
-  if (options.metadata) {
-    requestBody.metadata = options.metadata;
-  }
+	// Optional: Metadata (attached to image, not visible to end users)
+	if (options.metadata) {
+		requestBody.metadata = options.metadata;
+	}
 
-  // Optional: Expiry (default 30min, max 6hr from now)
-  if (options.expiry) {
-    requestBody.expiry = options.expiry;
-  }
+	// Optional: Expiry (default 30min, max 6hr from now)
+	if (options.expiry) {
+		requestBody.expiry = options.expiry;
+	}
 
-  // Optional: Custom ID (cannot use with requireSignedURLs=true)
-  if (options.id) {
-    requestBody.id = options.id;
-  }
+	// Optional: Custom ID (cannot use with requireSignedURLs=true)
+	if (options.id) {
+		requestBody.id = options.id;
+	}
 
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${env.IMAGES_ACCOUNT_ID}/images/v2/direct_upload`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.IMAGES_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    }
-  );
+	const response = await fetch(
+		`https://api.cloudflare.com/client/v4/accounts/${env.IMAGES_ACCOUNT_ID}/images/v2/direct_upload`,
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${env.IMAGES_API_TOKEN}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(requestBody),
+		},
+	);
 
-  const result: DirectUploadResponse = await response.json();
+	const result: DirectUploadResponse = await response.json();
 
-  if (!result.success) {
-    console.error('Failed to generate upload URL:', result.errors);
-    throw new Error(`Failed to generate upload URL: ${result.errors?.[0]?.message || 'Unknown error'}`);
-  }
+	if (!result.success) {
+		console.error("Failed to generate upload URL:", result.errors);
+		throw new Error(
+			`Failed to generate upload URL: ${result.errors?.[0]?.message || "Unknown error"}`,
+		);
+	}
 
-  return result;
+	return result;
 }
 
 /**
  * Example Cloudflare Worker endpoint
  */
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const url = new URL(request.url);
 
-    // CORS headers for frontend
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*', // Replace with your domain
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    };
+		// CORS headers for frontend
+		const corsHeaders = {
+			"Access-Control-Allow-Origin": "*", // Replace with your domain
+			"Access-Control-Allow-Methods": "POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type",
+		};
 
-    // Handle preflight
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
+		// Handle preflight
+		if (request.method === "OPTIONS") {
+			return new Response(null, { headers: corsHeaders });
+		}
 
-    // Endpoint: POST /api/upload-url
-    if (request.method === 'POST' && url.pathname === '/api/upload-url') {
-      try {
-        const body = await request.json<{
-          userId?: string;
-          requireSignedURLs?: boolean;
-        }>();
+		// Endpoint: POST /api/upload-url
+		if (request.method === "POST" && url.pathname === "/api/upload-url") {
+			try {
+				const body = await request.json<{
+					userId?: string;
+					requireSignedURLs?: boolean;
+				}>();
 
-        // Generate upload URL
-        const result = await generateUploadURL(
-          {
-            requireSignedURLs: body.requireSignedURLs ?? false,
-            metadata: {
-              userId: body.userId || 'anonymous',
-              uploadedAt: new Date().toISOString()
-            },
-            // Set expiry: 1 hour from now
-            expiry: new Date(Date.now() + 60 * 60 * 1000).toISOString()
-          },
-          env
-        );
+				// Generate upload URL
+				const result = await generateUploadURL(
+					{
+						requireSignedURLs: body.requireSignedURLs ?? false,
+						metadata: {
+							userId: body.userId || "anonymous",
+							uploadedAt: new Date().toISOString(),
+						},
+						// Set expiry: 1 hour from now
+						expiry: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+					},
+					env,
+				);
 
-        return Response.json(
-          {
-            success: true,
-            uploadURL: result.result?.uploadURL,
-            imageId: result.result?.id
-          },
-          { headers: corsHeaders }
-        );
+				return Response.json(
+					{
+						success: true,
+						uploadURL: result.result?.uploadURL,
+						imageId: result.result?.id,
+					},
+					{ headers: corsHeaders },
+				);
+			} catch (error) {
+				return Response.json(
+					{
+						error:
+							error instanceof Error
+								? error.message
+								: "Failed to generate upload URL",
+					},
+					{ status: 500, headers: corsHeaders },
+				);
+			}
+		}
 
-      } catch (error) {
-        return Response.json(
-          { error: error instanceof Error ? error.message : 'Failed to generate upload URL' },
-          { status: 500, headers: corsHeaders }
-        );
-      }
-    }
-
-    return Response.json({ error: 'Not found' }, { status: 404 });
-  }
+		return Response.json({ error: "Not found" }, { status: 404 });
+	},
 };
 
 /**
  * Check upload status (useful with webhooks)
  */
 export async function checkImageStatus(
-  imageId: string,
-  env: Env
+	imageId: string,
+	env: Env,
 ): Promise<{
-  success: boolean;
-  result?: {
-    id: string;
-    uploaded: string;
-    draft?: boolean; // true if upload not completed yet
-    variants?: string[];
-  };
+	success: boolean;
+	result?: {
+		id: string;
+		uploaded: string;
+		draft?: boolean; // true if upload not completed yet
+		variants?: string[];
+	};
 }> {
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${env.IMAGES_ACCOUNT_ID}/images/v1/${imageId}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${env.IMAGES_API_TOKEN}`
-      }
-    }
-  );
+	const response = await fetch(
+		`https://api.cloudflare.com/client/v4/accounts/${env.IMAGES_ACCOUNT_ID}/images/v1/${imageId}`,
+		{
+			headers: {
+				Authorization: `Bearer ${env.IMAGES_API_TOKEN}`,
+			},
+		},
+	);
 
-  return response.json();
+	return response.json();
 }
 
 /**

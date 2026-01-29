@@ -29,14 +29,18 @@ interface SearchResult {
 }
 
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+	async fetch(
+		request: Request,
+		env: Env,
+		ctx: ExecutionContext,
+	): Promise<Response> {
 		// Handle CORS preflight
-		if (request.method === 'OPTIONS') {
+		if (request.method === "OPTIONS") {
 			return new Response(null, {
 				headers: {
-					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-					'Access-Control-Allow-Headers': 'Content-Type',
+					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+					"Access-Control-Allow-Headers": "Content-Type",
 				},
 			});
 		}
@@ -44,31 +48,34 @@ export default {
 		const url = new URL(request.url);
 
 		// Route: POST /search - Semantic search endpoint
-		if (url.pathname === '/search' && request.method === 'POST') {
+		if (url.pathname === "/search" && request.method === "POST") {
 			try {
-				const body = await request.json() as SearchRequest;
+				const body = (await request.json()) as SearchRequest;
 				const { query, topK = 5, filter, namespace } = body;
 
 				if (!query) {
 					return Response.json(
-						{ error: 'Missing required field: query' },
-						{ status: 400 }
+						{ error: "Missing required field: query" },
+						{ status: 400 },
 					);
 				}
 
 				// Generate embedding for search query
-				const queryEmbedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+				const queryEmbedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
 					text: query,
 				});
 
 				// Search vector database
-				const results = await env.VECTORIZE_INDEX.query(queryEmbedding.data[0], {
-					topK,
-					filter,
-					namespace,
-					returnMetadata: 'all',
-					returnValues: false, // Save bandwidth
-				});
+				const results = await env.VECTORIZE_INDEX.query(
+					queryEmbedding.data[0],
+					{
+						topK,
+						filter,
+						namespace,
+						returnMetadata: "all",
+						returnValues: false, // Save bandwidth
+					},
+				);
 
 				// Format results
 				const searchResults: SearchResult[] = results.matches.map((match) => ({
@@ -77,29 +84,32 @@ export default {
 					metadata: match.metadata || {},
 				}));
 
-				return Response.json({
-					query,
-					results: searchResults,
-					count: results.count,
-				}, {
-					headers: { 'Access-Control-Allow-Origin': '*' },
-				});
-			} catch (error) {
-				console.error('Search error:', error);
 				return Response.json(
 					{
-						error: 'Search failed',
-						message: error instanceof Error ? error.message : 'Unknown error',
+						query,
+						results: searchResults,
+						count: results.count,
 					},
-					{ status: 500 }
+					{
+						headers: { "Access-Control-Allow-Origin": "*" },
+					},
+				);
+			} catch (error) {
+				console.error("Search error:", error);
+				return Response.json(
+					{
+						error: "Search failed",
+						message: error instanceof Error ? error.message : "Unknown error",
+					},
+					{ status: 500 },
 				);
 			}
 		}
 
 		// Route: POST /index - Add document to index
-		if (url.pathname === '/index' && request.method === 'POST') {
+		if (url.pathname === "/index" && request.method === "POST") {
 			try {
-				const body = await request.json() as {
+				const body = (await request.json()) as {
 					id: string;
 					content: string;
 					metadata?: Record<string, any>;
@@ -108,13 +118,13 @@ export default {
 
 				if (!body.id || !body.content) {
 					return Response.json(
-						{ error: 'Missing required fields: id, content' },
-						{ status: 400 }
+						{ error: "Missing required fields: id, content" },
+						{ status: 400 },
 					);
 				}
 
 				// Generate embedding for document
-				const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+				const embedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
 					text: body.content,
 				});
 
@@ -132,93 +142,99 @@ export default {
 					},
 				]);
 
-				return Response.json({
-					success: true,
-					id: body.id,
-					message: 'Document indexed successfully',
-				}, {
-					headers: { 'Access-Control-Allow-Origin': '*' },
-				});
-			} catch (error) {
-				console.error('Index error:', error);
 				return Response.json(
 					{
-						error: 'Indexing failed',
-						message: error instanceof Error ? error.message : 'Unknown error',
+						success: true,
+						id: body.id,
+						message: "Document indexed successfully",
 					},
-					{ status: 500 }
+					{
+						headers: { "Access-Control-Allow-Origin": "*" },
+					},
+				);
+			} catch (error) {
+				console.error("Index error:", error);
+				return Response.json(
+					{
+						error: "Indexing failed",
+						message: error instanceof Error ? error.message : "Unknown error",
+					},
+					{ status: 500 },
 				);
 			}
 		}
 
 		// Route: DELETE /index/:id - Remove document from index
-		if (url.pathname.startsWith('/index/') && request.method === 'DELETE') {
+		if (url.pathname.startsWith("/index/") && request.method === "DELETE") {
 			try {
-				const id = url.pathname.split('/')[2];
+				const id = url.pathname.split("/")[2];
 
 				if (!id) {
 					return Response.json(
-						{ error: 'Missing document ID' },
-						{ status: 400 }
+						{ error: "Missing document ID" },
+						{ status: 400 },
 					);
 				}
 
 				await env.VECTORIZE_INDEX.deleteByIds([id]);
 
-				return Response.json({
-					success: true,
-					id,
-					message: 'Document removed from index',
-				}, {
-					headers: { 'Access-Control-Allow-Origin': '*' },
-				});
-			} catch (error) {
-				console.error('Delete error:', error);
 				return Response.json(
 					{
-						error: 'Delete failed',
-						message: error instanceof Error ? error.message : 'Unknown error',
+						success: true,
+						id,
+						message: "Document removed from index",
 					},
-					{ status: 500 }
+					{
+						headers: { "Access-Control-Allow-Origin": "*" },
+					},
+				);
+			} catch (error) {
+				console.error("Delete error:", error);
+				return Response.json(
+					{
+						error: "Delete failed",
+						message: error instanceof Error ? error.message : "Unknown error",
+					},
+					{ status: 500 },
 				);
 			}
 		}
 
 		// Default: API documentation
 		return Response.json({
-			name: 'Vectorize Semantic Search API',
+			name: "Vectorize Semantic Search API",
 			endpoints: {
-				'POST /search': {
-					description: 'Semantic search over indexed documents',
+				"POST /search": {
+					description: "Semantic search over indexed documents",
 					body: {
-						query: 'string (required)',
-						topK: 'number (optional, default: 5)',
-						filter: 'object (optional)',
-						namespace: 'string (optional)',
+						query: "string (required)",
+						topK: "number (optional, default: 5)",
+						filter: "object (optional)",
+						namespace: "string (optional)",
 					},
 					example: {
-						query: 'How do I deploy a Worker?',
+						query: "How do I deploy a Worker?",
 						topK: 3,
-						filter: { category: 'documentation' },
+						filter: { category: "documentation" },
 					},
 				},
-				'POST /index': {
-					description: 'Add or update document in index',
+				"POST /index": {
+					description: "Add or update document in index",
 					body: {
-						id: 'string (required)',
-						content: 'string (required)',
-						metadata: 'object (optional)',
-						namespace: 'string (optional)',
+						id: "string (required)",
+						content: "string (required)",
+						metadata: "object (optional)",
+						namespace: "string (optional)",
 					},
 					example: {
-						id: 'doc-123',
-						content: 'Cloudflare Workers are serverless functions...',
-						metadata: { category: 'documentation', author: 'Cloudflare' },
+						id: "doc-123",
+						content: "Cloudflare Workers are serverless functions...",
+						metadata: { category: "documentation", author: "Cloudflare" },
 					},
 				},
-				'DELETE /index/:id': {
-					description: 'Remove document from index',
-					example: 'DELETE /index/doc-123',
+				"DELETE /index/:id": {
+					description: "Remove document from index",
+					example: "DELETE /index/doc-123",
 				},
 			},
 		});

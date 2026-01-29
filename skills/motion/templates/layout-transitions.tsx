@@ -14,8 +14,8 @@
  * For Next.js App Router, add "use client" directive at top of file.
  */
 
-import { motion, LayoutGroup } from "motion/react"
-import { useState, ReactNode } from "react"
+import { LayoutGroup, motion } from "motion/react"
+import { type ReactNode, useState } from "react"
 
 // ============================================================================
 // PATTERN 1: Basic Layout Animation

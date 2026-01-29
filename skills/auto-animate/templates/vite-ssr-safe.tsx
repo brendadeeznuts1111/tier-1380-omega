@@ -1,8 +1,8 @@
 // AutoAnimate - SSR-Safe Pattern for Cloudflare Workers
 // Prevents "useEffect not defined" errors in server environments
 
-import { useState, useEffect } from "react";
 import type { AutoAnimateOptions } from "@formkit/auto-animate";
+import { useEffect, useState } from "react";
 
 /**
  * SSR-Safe AutoAnimate Hook
@@ -18,115 +18,119 @@ import type { AutoAnimateOptions } from "@formkit/auto-animate";
  */
 
 export function useAutoAnimateSafe<T extends HTMLElement>(
-  options?: Partial<AutoAnimateOptions>
+	options?: Partial<AutoAnimateOptions>,
 ) {
-  const [parent, setParent] = useState<T | null>(null);
+	const [parent, setParent] = useState<T | null>(null);
 
-  useEffect(() => {
-    // Only import on client side
-    if (typeof window !== "undefined" && parent) {
-      import("@formkit/auto-animate").then(({ default: autoAnimate }) => {
-        autoAnimate(parent, options);
-      });
-    }
-  }, [parent, options]);
+	useEffect(() => {
+		// Only import on client side
+		if (typeof window !== "undefined" && parent) {
+			import("@formkit/auto-animate").then(({ default: autoAnimate }) => {
+				autoAnimate(parent, options);
+			});
+		}
+	}, [parent, options]);
 
-  return [parent, setParent] as const;
+	return [parent, setParent] as const;
 }
 
 /**
  * Alternative: useAutoAnimate from react package (client-only import)
  */
-export function ClientOnlyAutoAnimate({ children }: { children: React.ReactNode }) {
-  const [isClient, setIsClient] = useState(false);
+export function ClientOnlyAutoAnimate({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+	useEffect(() => {
+		setIsClient(true);
+	}, []);
 
-  if (!isClient) {
-    // Server render: return children without animation
-    return <>{children}</>;
-  }
+	if (!isClient) {
+		// Server render: return children without animation
+		return <>{children}</>;
+	}
 
-  // Client render: use AutoAnimate
-  return <AnimatedList>{children}</AnimatedList>;
+	// Client render: use AutoAnimate
+	return <AnimatedList>{children}</AnimatedList>;
 }
 
 function AnimatedList({ children }: { children: React.ReactNode }) {
-  // This import only runs on client
-  const { useAutoAnimate } = require("@formkit/auto-animate/react");
-  const [parent] = useAutoAnimate();
+	// This import only runs on client
+	const { useAutoAnimate } = require("@formkit/auto-animate/react");
+	const [parent] = useAutoAnimate();
 
-  return <div ref={parent}>{children}</div>;
+	return <div ref={parent}>{children}</div>;
 }
 
 /**
  * Example Usage: Todo List with SSR-Safe Hook
  */
 interface Todo {
-  id: number;
-  text: string;
+	id: number;
+	text: string;
 }
 
 export function SSRSafeTodoList() {
-  // Use the SSR-safe hook
-  const [parent, setParent] = useAutoAnimateSafe<HTMLUListElement>();
+	// Use the SSR-safe hook
+	const [parent, setParent] = useAutoAnimateSafe<HTMLUListElement>();
 
-  const [todos, setTodos] = useState<Todo[]>([
-    { id: 1, text: "Server-rendered todo" },
-  ]);
+	const [todos, setTodos] = useState<Todo[]>([
+		{ id: 1, text: "Server-rendered todo" },
+	]);
 
-  const [newTodo, setNewTodo] = useState("");
+	const [newTodo, setNewTodo] = useState("");
 
-  const addTodo = () => {
-    if (!newTodo.trim()) return;
-    setTodos([...todos, { id: Date.now(), text: newTodo }]);
-    setNewTodo("");
-  };
+	const addTodo = () => {
+		if (!newTodo.trim()) return;
+		setTodos([...todos, { id: Date.now(), text: newTodo }]);
+		setNewTodo("");
+	};
 
-  const removeTodo = (id: number) => {
-    setTodos(todos.filter((t) => t.id !== id));
-  };
+	const removeTodo = (id: number) => {
+		setTodos(todos.filter((t) => t.id !== id));
+	};
 
-  return (
-    <div className="max-w-md mx-auto p-6 space-y-4">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newTodo}
-          onChange={(e) => setNewTodo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addTodo()}
-          placeholder="New todo..."
-          className="flex-1 px-3 py-2 border rounded"
-        />
-        <button
-          onClick={addTodo}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Add
-        </button>
-      </div>
+	return (
+		<div className="max-w-md mx-auto p-6 space-y-4">
+			<div className="flex gap-2">
+				<input
+					type="text"
+					value={newTodo}
+					onChange={(e) => setNewTodo(e.target.value)}
+					onKeyDown={(e) => e.key === "Enter" && addTodo()}
+					placeholder="New todo..."
+					className="flex-1 px-3 py-2 border rounded"
+				/>
+				<button
+					onClick={addTodo}
+					className="px-4 py-2 bg-blue-600 text-white rounded"
+				>
+					Add
+				</button>
+			</div>
 
-      {/* Set ref using callback pattern for SSR safety */}
-      <ul ref={setParent} className="space-y-2">
-        {todos.map((todo) => (
-          <li
-            key={todo.id}
-            className="flex items-center justify-between p-4 bg-white border rounded"
-          >
-            <span>{todo.text}</span>
-            <button
-              onClick={() => removeTodo(todo.id)}
-              className="px-3 py-1 bg-red-500 text-white rounded text-sm"
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+			{/* Set ref using callback pattern for SSR safety */}
+			<ul ref={setParent} className="space-y-2">
+				{todos.map((todo) => (
+					<li
+						key={todo.id}
+						className="flex items-center justify-between p-4 bg-white border rounded"
+					>
+						<span>{todo.text}</span>
+						<button
+							onClick={() => removeTodo(todo.id)}
+							className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+						>
+							Remove
+						</button>
+					</li>
+				))}
+			</ul>
+		</div>
+	);
 }
 
 /**

@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 /**
  * Vite Configuration for TinaCMS + React
@@ -10,12 +10,12 @@ import react from '@vitejs/plugin-react'
  * - Host 0.0.0.0 for Docker compatibility
  */
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 3000,
-    host: '0.0.0.0',  // Allows external connections (Docker, network)
-  },
-  build: {
-    outDir: 'dist',
-  },
-})
+	plugins: [react()],
+	server: {
+		port: 3000,
+		host: "0.0.0.0", // Allows external connections (Docker, network)
+	},
+	build: {
+		outDir: "dist",
+	},
+});

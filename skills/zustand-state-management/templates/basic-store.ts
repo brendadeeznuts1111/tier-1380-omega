@@ -9,20 +9,20 @@
  * Learn more: See SKILL.md for TypeScript version
  */
 
-import { create } from 'zustand'
+import { create } from "zustand";
 
 // Create store with minimal setup
 export const useStore = create((set) => ({
-  // State
-  count: 0,
-  user: null,
+	// State
+	count: 0,
+	user: null,
 
-  // Actions
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  decrement: () => set((state) => ({ count: state.count - 1 })),
-  setUser: (user) => set({ user }),
-  reset: () => set({ count: 0, user: null }),
-}))
+	// Actions
+	increment: () => set((state) => ({ count: state.count + 1 })),
+	decrement: () => set((state) => ({ count: state.count - 1 })),
+	setUser: (user) => set({ user }),
+	reset: () => set({ count: 0, user: null }),
+}));
 
 /**
  * Usage in component:

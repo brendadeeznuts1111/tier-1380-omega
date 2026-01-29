@@ -21,9 +21,9 @@
 
 'use client';
 
-import { useChat } from 'ai/react';
-import { useState, FormEvent } from 'react';
 import type { Message } from 'ai';
+import { useChat } from 'ai/react';
+import { type FormEvent, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';

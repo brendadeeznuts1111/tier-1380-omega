@@ -19,7 +19,7 @@ import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
 type Bindings = {
-  HYPERDRIVE: Hyperdrive;
+	HYPERDRIVE: Hyperdrive;
 };
 
 /**
@@ -54,98 +54,99 @@ type Bindings = {
  */
 
 export default {
-  async fetch(
-    request: Request,
-    env: Bindings,
-    ctx: ExecutionContext
-  ): Promise<Response> {
-    // Create pg.Pool for driver adapter
-    const pool = new Pool({
-      connectionString: env.HYPERDRIVE.connectionString,
-      max: 5
-    });
+	async fetch(
+		request: Request,
+		env: Bindings,
+		ctx: ExecutionContext,
+	): Promise<Response> {
+		// Create pg.Pool for driver adapter
+		const pool = new Pool({
+			connectionString: env.HYPERDRIVE.connectionString,
+			max: 5,
+		});
 
-    // Create Prisma driver adapter
-    const adapter = new PrismaPg(pool);
+		// Create Prisma driver adapter
+		const adapter = new PrismaPg(pool);
 
-    // Create Prisma client with adapter
-    const prisma = new PrismaClient({ adapter });
+		// Create Prisma client with adapter
+		const prisma = new PrismaClient({ adapter });
 
-    try {
-      // Example: Create user
-      const newUser = await prisma.user.create({
-        data: {
-          name: "John Doe",
-          email: `john.${Date.now()}@example.com`
-        }
-      });
+		try {
+			// Example: Create user
+			const newUser = await prisma.user.create({
+				data: {
+					name: "John Doe",
+					email: `john.${Date.now()}@example.com`,
+				},
+			});
 
-      // Example: Find all users
-      const allUsers = await prisma.user.findMany({
-        include: {
-          posts: true  // Include related posts
-        }
-      });
+			// Example: Find all users
+			const allUsers = await prisma.user.findMany({
+				include: {
+					posts: true, // Include related posts
+				},
+			});
 
-      // Example: Find user by email
-      const user = await prisma.user.findUnique({
-        where: {
-          email: "john@example.com"
-        }
-      });
+			// Example: Find user by email
+			const user = await prisma.user.findUnique({
+				where: {
+					email: "john@example.com",
+				},
+			});
 
-      // Example: Update user
-      await prisma.user.update({
-        where: { id: newUser.id },
-        data: { name: "Jane Doe" }
-      });
+			// Example: Update user
+			await prisma.user.update({
+				where: { id: newUser.id },
+				data: { name: "Jane Doe" },
+			});
 
-      // Example: Create post with relation
-      await prisma.post.create({
-        data: {
-          title: "My First Post",
-          content: "Hello World!",
-          published: true,
-          authorId: newUser.id
-        }
-      });
+			// Example: Create post with relation
+			await prisma.post.create({
+				data: {
+					title: "My First Post",
+					content: "Hello World!",
+					published: true,
+					authorId: newUser.id,
+				},
+			});
 
-      // Example: Complex query with filters
-      const recentUsers = await prisma.user.findMany({
-        where: {
-          createdAt: {
-            gte: new Date('2024-01-01')
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 10
-      });
+			// Example: Complex query with filters
+			const recentUsers = await prisma.user.findMany({
+				where: {
+					createdAt: {
+						gte: new Date("2024-01-01"),
+					},
+				},
+				orderBy: {
+					createdAt: "desc",
+				},
+				take: 10,
+			});
 
-      return Response.json({
-        success: true,
-        data: {
-          newUser,
-          allUsers,
-          user,
-          recentUsers
-        }
-      });
+			return Response.json({
+				success: true,
+				data: {
+					newUser,
+					allUsers,
+					user,
+					recentUsers,
+				},
+			});
+		} catch (error: any) {
+			console.error("Database error:", error);
 
-    } catch (error: any) {
-      console.error("Database error:", error);
-
-      return Response.json({
-        success: false,
-        error: error.message
-      }, {
-        status: 500
-      });
-
-    } finally {
-      // Clean up connections
-      ctx.waitUntil(pool.end());
-    }
-  }
+			return Response.json(
+				{
+					success: false,
+					error: error.message,
+				},
+				{
+					status: 500,
+				},
+			);
+		} finally {
+			// Clean up connections
+			ctx.waitUntil(pool.end());
+		}
+	},
 };

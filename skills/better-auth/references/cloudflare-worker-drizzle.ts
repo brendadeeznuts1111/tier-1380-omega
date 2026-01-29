@@ -14,28 +14,28 @@
  * There is NO direct d1Adapter()!
  */
 
-import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { rateLimit } from "better-auth/plugins";
+import { type DrizzleD1Database, drizzle } from "drizzle-orm/d1";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 import * as schema from "../db/schema"; // Your Drizzle schema
 
 // ═══════════════════════════════════════════════════════════════
 // Environment bindings
 // ═══════════════════════════════════════════════════════════════
 type Env = {
-  DB: D1Database;
-  SESSIONS_KV: KVNamespace;
-  RATE_LIMIT_KV: KVNamespace;
-  BETTER_AUTH_SECRET: string;
-  BETTER_AUTH_URL: string;
-  GOOGLE_CLIENT_ID: string;
-  GOOGLE_CLIENT_SECRET: string;
-  GITHUB_CLIENT_ID: string;
-  GITHUB_CLIENT_SECRET: string;
-  FRONTEND_URL: string;
+	DB: D1Database;
+	SESSIONS_KV: KVNamespace;
+	RATE_LIMIT_KV: KVNamespace;
+	BETTER_AUTH_SECRET: string;
+	BETTER_AUTH_URL: string;
+	GOOGLE_CLIENT_ID: string;
+	GOOGLE_CLIENT_SECRET: string;
+	GITHUB_CLIENT_ID: string;
+	GITHUB_CLIENT_SECRET: string;
+	FRONTEND_URL: string;
 };
 
 // Database type
@@ -47,237 +47,237 @@ const app = new Hono<{ Bindings: Env }>();
 // CORS configuration for SPA
 // ═══════════════════════════════════════════════════════════════
 app.use("/api/*", async (c, next) => {
-  const corsMiddleware = cors({
-    origin: [c.env.FRONTEND_URL, "http://localhost:3000"],
-    credentials: true,
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  });
-  return corsMiddleware(c, next);
+	const corsMiddleware = cors({
+		origin: [c.env.FRONTEND_URL, "http://localhost:3000"],
+		credentials: true,
+		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		allowHeaders: ["Content-Type", "Authorization"],
+	});
+	return corsMiddleware(c, next);
 });
 
 // ═══════════════════════════════════════════════════════════════
 // Helper: Initialize Drizzle database
 // ═══════════════════════════════════════════════════════════════
 function createDatabase(d1: D1Database): Database {
-  return drizzle(d1, { schema });
+	return drizzle(d1, { schema });
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Helper: Initialize auth (per-request to access env)
 // ═══════════════════════════════════════════════════════════════
 function createAuth(db: Database, env: Env) {
-  return betterAuth({
-    // Base URL for OAuth callbacks
-    baseURL: env.BETTER_AUTH_URL,
+	return betterAuth({
+		// Base URL for OAuth callbacks
+		baseURL: env.BETTER_AUTH_URL,
 
-    // Secret for signing tokens
-    secret: env.BETTER_AUTH_SECRET,
+		// Secret for signing tokens
+		secret: env.BETTER_AUTH_SECRET,
 
-    // ⚠️ CRITICAL: Use Drizzle adapter with SQLite provider
-    // There is NO direct d1Adapter()!
-    database: drizzleAdapter(db, {
-      provider: "sqlite",
-    }),
+		// ⚠️ CRITICAL: Use Drizzle adapter with SQLite provider
+		// There is NO direct d1Adapter()!
+		database: drizzleAdapter(db, {
+			provider: "sqlite",
+		}),
 
-    // Email/password authentication
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: true,
-      sendVerificationEmail: async ({ user, url, token }) => {
-        // TODO: Implement email sending
-        // Use Resend, SendGrid, or Cloudflare Email Routing
-        console.log(`Verification email for ${user.email}: ${url}`);
-        console.log(`Verification code: ${token}`);
-      },
-    },
+		// Email/password authentication
+		emailAndPassword: {
+			enabled: true,
+			requireEmailVerification: true,
+			sendVerificationEmail: async ({ user, url, token }) => {
+				// TODO: Implement email sending
+				// Use Resend, SendGrid, or Cloudflare Email Routing
+				console.log(`Verification email for ${user.email}: ${url}`);
+				console.log(`Verification code: ${token}`);
+			},
+		},
 
-    // Social providers
-    socialProviders: {
-      google: {
-        clientId: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
-        scope: ["openid", "email", "profile"],
-      },
-      github: {
-        clientId: env.GITHUB_CLIENT_ID,
-        clientSecret: env.GITHUB_CLIENT_SECRET,
-        scope: ["user:email", "read:user"],
-      },
-    },
+		// Social providers
+		socialProviders: {
+			google: {
+				clientId: env.GOOGLE_CLIENT_ID,
+				clientSecret: env.GOOGLE_CLIENT_SECRET,
+				scope: ["openid", "email", "profile"],
+			},
+			github: {
+				clientId: env.GITHUB_CLIENT_ID,
+				clientSecret: env.GITHUB_CLIENT_SECRET,
+				scope: ["user:email", "read:user"],
+			},
+		},
 
-    // Session configuration
-    session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // Update every 24 hours
+		// Session configuration
+		session: {
+			expiresIn: 60 * 60 * 24 * 7, // 7 days
+			updateAge: 60 * 60 * 24, // Update every 24 hours
 
-      // Use KV for sessions (strong consistency vs D1 eventual consistency)
-      storage: {
-        get: async (sessionId) => {
-          const session = await env.SESSIONS_KV.get(sessionId);
-          return session ? JSON.parse(session) : null;
-        },
-        set: async (sessionId, session, ttl) => {
-          await env.SESSIONS_KV.put(sessionId, JSON.stringify(session), {
-            expirationTtl: ttl,
-          });
-        },
-        delete: async (sessionId) => {
-          await env.SESSIONS_KV.delete(sessionId);
-        },
-      },
-    },
+			// Use KV for sessions (strong consistency vs D1 eventual consistency)
+			storage: {
+				get: async (sessionId) => {
+					const session = await env.SESSIONS_KV.get(sessionId);
+					return session ? JSON.parse(session) : null;
+				},
+				set: async (sessionId, session, ttl) => {
+					await env.SESSIONS_KV.put(sessionId, JSON.stringify(session), {
+						expirationTtl: ttl,
+					});
+				},
+				delete: async (sessionId) => {
+					await env.SESSIONS_KV.delete(sessionId);
+				},
+			},
+		},
 
-    // Plugins
-    plugins: [
-      rateLimit({
-        window: 60, // 60 seconds
-        max: 10, // 10 requests per window
-        storage: {
-          get: async (key) => {
-            return await env.RATE_LIMIT_KV.get(key);
-          },
-          set: async (key, value, ttl) => {
-            await env.RATE_LIMIT_KV.put(key, value, {
-              expirationTtl: ttl,
-            });
-          },
-        },
-      }),
-    ],
-  });
+		// Plugins
+		plugins: [
+			rateLimit({
+				window: 60, // 60 seconds
+				max: 10, // 10 requests per window
+				storage: {
+					get: async (key) => {
+						return await env.RATE_LIMIT_KV.get(key);
+					},
+					set: async (key, value, ttl) => {
+						await env.RATE_LIMIT_KV.put(key, value, {
+							expirationTtl: ttl,
+						});
+					},
+				},
+			}),
+		],
+	});
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Auth routes - handle all better-auth endpoints
 // ═══════════════════════════════════════════════════════════════
 app.all("/api/auth/*", async (c) => {
-  const db = createDatabase(c.env.DB);
-  const auth = createAuth(db, c.env);
-  return auth.handler(c.req.raw);
+	const db = createDatabase(c.env.DB);
+	const auth = createAuth(db, c.env);
+	return auth.handler(c.req.raw);
 });
 
 // ═══════════════════════════════════════════════════════════════
 // Example: Protected API route
 // ═══════════════════════════════════════════════════════════════
 app.get("/api/protected", async (c) => {
-  const db = createDatabase(c.env.DB);
-  const auth = createAuth(db, c.env);
+	const db = createDatabase(c.env.DB);
+	const auth = createAuth(db, c.env);
 
-  // Verify session
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
+	// Verify session
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-  return c.json({
-    message: "Protected data",
-    user: {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-    },
-  });
+	return c.json({
+		message: "Protected data",
+		user: {
+			id: session.user.id,
+			email: session.user.email,
+			name: session.user.name,
+		},
+	});
 });
 
 // ═══════════════════════════════════════════════════════════════
 // Example: User profile endpoint
 // ═══════════════════════════════════════════════════════════════
 app.get("/api/user/profile", async (c) => {
-  const db = createDatabase(c.env.DB);
-  const auth = createAuth(db, c.env);
+	const db = createDatabase(c.env.DB);
+	const auth = createAuth(db, c.env);
 
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-  // Fetch additional user data from D1
-  const userProfile = await db.query.user.findFirst({
-    where: (user, { eq }) => eq(user.id, session.user.id),
-  });
+	// Fetch additional user data from D1
+	const userProfile = await db.query.user.findFirst({
+		where: (user, { eq }) => eq(user.id, session.user.id),
+	});
 
-  return c.json(userProfile);
+	return c.json(userProfile);
 });
 
 // ═══════════════════════════════════════════════════════════════
 // Example: Update user profile
 // ═══════════════════════════════════════════════════════════════
 app.patch("/api/user/profile", async (c) => {
-  const db = createDatabase(c.env.DB);
-  const auth = createAuth(db, c.env);
+	const db = createDatabase(c.env.DB);
+	const auth = createAuth(db, c.env);
 
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-  const { name } = await c.req.json();
+	const { name } = await c.req.json();
 
-  // Update user in D1 using Drizzle
-  await db
-    .update(schema.user)
-    .set({ name, updatedAt: new Date() })
-    .where(eq(schema.user.id, session.user.id));
+	// Update user in D1 using Drizzle
+	await db
+		.update(schema.user)
+		.set({ name, updatedAt: new Date() })
+		.where(eq(schema.user.id, session.user.id));
 
-  return c.json({ success: true });
+	return c.json({ success: true });
 });
 
 // ═══════════════════════════════════════════════════════════════
 // Example: Admin-only endpoint
 // ═══════════════════════════════════════════════════════════════
 app.get("/api/admin/users", async (c) => {
-  const db = createDatabase(c.env.DB);
-  const auth = createAuth(db, c.env);
+	const db = createDatabase(c.env.DB);
+	const auth = createAuth(db, c.env);
 
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-  // Check admin role (you'd store this in users table)
-  const user = await db.query.user.findFirst({
-    where: (user, { eq }) => eq(user.id, session.user.id),
-    // Add role field to your schema if needed
-  });
+	// Check admin role (you'd store this in users table)
+	const user = await db.query.user.findFirst({
+		where: (user, { eq }) => eq(user.id, session.user.id),
+		// Add role field to your schema if needed
+	});
 
-  // if (user.role !== 'admin') {
-  //   return c.json({ error: 'Forbidden' }, 403)
-  // }
+	// if (user.role !== 'admin') {
+	//   return c.json({ error: 'Forbidden' }, 403)
+	// }
 
-  // Fetch all users
-  const users = await db.query.user.findMany({
-    columns: {
-      id: true,
-      email: true,
-      name: true,
-      createdAt: true,
-    },
-  });
+	// Fetch all users
+	const users = await db.query.user.findMany({
+		columns: {
+			id: true,
+			email: true,
+			name: true,
+			createdAt: true,
+		},
+	});
 
-  return c.json(users);
+	return c.json(users);
 });
 
 // ═══════════════════════════════════════════════════════════════
 // Health check
 // ═══════════════════════════════════════════════════════════════
 app.get("/health", (c) => {
-  return c.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-  });
+	return c.json({
+		status: "ok",
+		timestamp: new Date().toISOString(),
+	});
 });
 
 // ═══════════════════════════════════════════════════════════════

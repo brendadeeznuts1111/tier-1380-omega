@@ -12,7 +12,7 @@
  * - Source: https://clerk.com/changelog/2024-10-22-clerk-nextjs-v6
  */
 
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 /**
  * Define public routes (routes that don't require authentication)
@@ -23,15 +23,15 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
  * - '/api/public/*' - wildcard
  */
 const isPublicRoute = createRouteMatcher([
-  '/',                    // Homepage
-  '/sign-in(.*)',         // Sign-in page and sub-paths
-  '/sign-up(.*)',         // Sign-up page and sub-paths
-  '/api/public(.*)',      // Public API routes
-  '/api/webhooks(.*)',    // Webhook endpoints
-  '/about',               // Static pages
-  '/pricing',
-  '/contact',
-])
+	"/", // Homepage
+	"/sign-in(.*)", // Sign-in page and sub-paths
+	"/sign-up(.*)", // Sign-up page and sub-paths
+	"/api/public(.*)", // Public API routes
+	"/api/webhooks(.*)", // Webhook endpoints
+	"/about", // Static pages
+	"/pricing",
+	"/contact",
+]);
 
 /**
  * Alternative: Define protected routes instead
@@ -62,10 +62,10 @@ export default clerkMiddleware(async (auth, request) => {
  * - Without await, route protection will not work
  */
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect()
-  }
-})
+	if (!isPublicRoute(request)) {
+		await auth.protect();
+	}
+});
 
 /**
  * Matcher Configuration
@@ -74,14 +74,14 @@ export default clerkMiddleware(async (auth, request) => {
  * This is the recommended configuration from Clerk.
  */
 export const config = {
-  matcher: [
-    // Skip Next.js internals and static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+	matcher: [
+		// Skip Next.js internals and static files
+		"/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
 
-    // Always run for API routes
-    '/(api|trpc)(.*)',
-  ],
-}
+		// Always run for API routes
+		"/(api|trpc)(.*)",
+	],
+};
 
 /**
  * Advanced: Role-Based Protection

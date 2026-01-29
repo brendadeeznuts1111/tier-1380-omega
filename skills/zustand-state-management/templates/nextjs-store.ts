@@ -14,57 +14,57 @@
  * Learn more: See SKILL.md Issue #1 for detailed explanation
  */
 
-'use client' // Required for Next.js App Router
+"use client"; // Required for Next.js App Router
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface User {
-  id: string
-  name: string
+	id: string;
+	name: string;
 }
 
 interface NextJsStore {
-  // State
-  _hasHydrated: boolean // CRITICAL: Track hydration status
-  count: number
-  user: User | null
+	// State
+	_hasHydrated: boolean; // CRITICAL: Track hydration status
+	count: number;
+	user: User | null;
 
-  // Actions
-  setHasHydrated: (hydrated: boolean) => void
-  increment: () => void
-  setUser: (user: User | null) => void
-  reset: () => void
+	// Actions
+	setHasHydrated: (hydrated: boolean) => void;
+	increment: () => void;
+	setUser: (user: User | null) => void;
+	reset: () => void;
 }
 
 export const useNextJsStore = create<NextJsStore>()(
-  persist(
-    (set) => ({
-      // Initial state
-      _hasHydrated: false, // Start false
-      count: 0,
-      user: null,
+	persist(
+		(set) => ({
+			// Initial state
+			_hasHydrated: false, // Start false
+			count: 0,
+			user: null,
 
-      // Hydration action
-      setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
+			// Hydration action
+			setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
 
-      // Regular actions
-      increment: () => set((state) => ({ count: state.count + 1 })),
+			// Regular actions
+			increment: () => set((state) => ({ count: state.count + 1 })),
 
-      setUser: (user) => set({ user }),
+			setUser: (user) => set({ user }),
 
-      reset: () => set({ count: 0, user: null }),
-    }),
-    {
-      name: 'nextjs-storage',
+			reset: () => set({ count: 0, user: null }),
+		}),
+		{
+			name: "nextjs-storage",
 
-      // CRITICAL: Call setHasHydrated when rehydration completes
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true)
-      },
-    },
-  ),
-)
+			// CRITICAL: Call setHasHydrated when rehydration completes
+			onRehydrateStorage: () => (state) => {
+				state?.setHasHydrated(true);
+			},
+		},
+	),
+);
 
 /**
  * Usage in Next.js component:

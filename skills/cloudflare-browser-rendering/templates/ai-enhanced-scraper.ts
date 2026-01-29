@@ -4,98 +4,101 @@
 import puppeteer from "@cloudflare/puppeteer";
 
 interface Env {
-  MYBROWSER: Fetcher;
-  AI: Ai;
+	MYBROWSER: Fetcher;
+	AI: Ai;
 }
 
 interface ProductData {
-  name: string;
-  price: string;
-  description: string;
-  availability: string;
-  [key: string]: any;
+	name: string;
+	price: string;
+	description: string;
+	availability: string;
+	[key: string]: any;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get("url");
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const { searchParams } = new URL(request.url);
+		const url = searchParams.get("url");
 
-    if (!url) {
-      return new Response("Missing ?url parameter", { status: 400 });
-    }
+		if (!url) {
+			return new Response("Missing ?url parameter", { status: 400 });
+		}
 
-    // Step 1: Scrape page content with browser
-    const browser = await puppeteer.launch(env.MYBROWSER);
+		// Step 1: Scrape page content with browser
+		const browser = await puppeteer.launch(env.MYBROWSER);
 
-    try {
-      const page = await browser.newPage();
+		try {
+			const page = await browser.newPage();
 
-      await page.goto(url, {
-        waitUntil: "networkidle0",
-        timeout: 30000,
-      });
+			await page.goto(url, {
+				waitUntil: "networkidle0",
+				timeout: 30000,
+			});
 
-      // Extract raw HTML content
-      const bodyContent = await page.$eval("body", (el) => el.innerHTML);
+			// Extract raw HTML content
+			const bodyContent = await page.$eval("body", (el) => el.innerHTML);
 
-      await browser.close();
+			await browser.close();
 
-      // Truncate to fit AI context (4000 chars)
-      const truncatedContent = bodyContent.slice(0, 4000);
+			// Truncate to fit AI context (4000 chars)
+			const truncatedContent = bodyContent.slice(0, 4000);
 
-      // Step 2: Extract structured data with AI
-      const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a data extraction assistant. Extract product information from HTML and return ONLY valid JSON.",
-          },
-          {
-            role: "user",
-            content: `Extract product information from this HTML. Return JSON with these fields: name, price, description, availability. If any field is not found, use empty string.\n\nHTML:\n${truncatedContent}`,
-          },
-        ],
-        stream: false,
-      });
+			// Step 2: Extract structured data with AI
+			const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+				messages: [
+					{
+						role: "system",
+						content:
+							"You are a data extraction assistant. Extract product information from HTML and return ONLY valid JSON.",
+					},
+					{
+						role: "user",
+						content: `Extract product information from this HTML. Return JSON with these fields: name, price, description, availability. If any field is not found, use empty string.\n\nHTML:\n${truncatedContent}`,
+					},
+				],
+				stream: false,
+			});
 
-      // Parse AI response
-      let productData: ProductData;
-      try {
-        const responseText = (aiResponse as any).response;
-        // Try to extract JSON from response (AI might wrap it in markdown)
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          productData = JSON.parse(jsonMatch[0]);
-        } else {
-          productData = JSON.parse(responseText);
-        }
-      } catch {
-        productData = {
-          name: "",
-          price: "",
-          description: "",
-          availability: "",
-          raw: (aiResponse as any).response,
-        };
-      }
+			// Parse AI response
+			let productData: ProductData;
+			try {
+				const responseText = (aiResponse as any).response;
+				// Try to extract JSON from response (AI might wrap it in markdown)
+				const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+				if (jsonMatch) {
+					productData = JSON.parse(jsonMatch[0]);
+				} else {
+					productData = JSON.parse(responseText);
+				}
+			} catch {
+				productData = {
+					name: "",
+					price: "",
+					description: "",
+					availability: "",
+					raw: (aiResponse as any).response,
+				};
+			}
 
-      return Response.json({
-        url,
-        product: productData,
-        extractedAt: new Date().toISOString(),
-      });
-    } catch (error) {
-      await browser.close();
-      return Response.json(
-        {
-          error: error instanceof Error ? error.message : "AI-enhanced scraping failed",
-        },
-        { status: 500 }
-      );
-    }
-  },
+			return Response.json({
+				url,
+				product: productData,
+				extractedAt: new Date().toISOString(),
+			});
+		} catch (error) {
+			await browser.close();
+			return Response.json(
+				{
+					error:
+						error instanceof Error
+							? error.message
+							: "AI-enhanced scraping failed",
+				},
+				{ status: 500 },
+			);
+		}
+	},
 };
 
 /**

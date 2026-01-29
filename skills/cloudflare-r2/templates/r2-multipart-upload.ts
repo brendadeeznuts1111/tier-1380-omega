@@ -14,169 +14,196 @@
  * 4. DELETE /mpu/abort - Abort the upload (optional)
  */
 
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 type Bindings = {
-  MY_BUCKET: R2Bucket;
+	MY_BUCKET: R2Bucket;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Create multipart upload
-app.post('/mpu/create', async (c) => {
-  const { key, contentType } = await c.req.json<{
-    key: string;
-    contentType?: string;
-  }>();
+app.post("/mpu/create", async (c) => {
+	const { key, contentType } = await c.req.json<{
+		key: string;
+		contentType?: string;
+	}>();
 
-  if (!key) {
-    return c.json({
-      success: false,
-      error: 'Missing required field: key',
-    }, 400);
-  }
+	if (!key) {
+		return c.json(
+			{
+				success: false,
+				error: "Missing required field: key",
+			},
+			400,
+		);
+	}
 
-  try {
-    const multipart = await c.env.MY_BUCKET.createMultipartUpload(key, {
-      httpMetadata: {
-        contentType: contentType || 'application/octet-stream',
-      },
-    });
+	try {
+		const multipart = await c.env.MY_BUCKET.createMultipartUpload(key, {
+			httpMetadata: {
+				contentType: contentType || "application/octet-stream",
+			},
+		});
 
-    return c.json({
-      success: true,
-      key: multipart.key,
-      uploadId: multipart.uploadId,
-    });
-  } catch (error: any) {
-    console.error('Create multipart error:', error.message);
-    return c.json({
-      success: false,
-      error: 'Failed to create multipart upload',
-    }, 500);
-  }
+		return c.json({
+			success: true,
+			key: multipart.key,
+			uploadId: multipart.uploadId,
+		});
+	} catch (error: any) {
+		console.error("Create multipart error:", error.message);
+		return c.json(
+			{
+				success: false,
+				error: "Failed to create multipart upload",
+			},
+			500,
+		);
+	}
 });
 
 // Upload a part
-app.put('/mpu/upload-part', async (c) => {
-  const key = c.req.query('key');
-  const uploadId = c.req.query('uploadId');
-  const partNumber = parseInt(c.req.query('partNumber') || '0');
+app.put("/mpu/upload-part", async (c) => {
+	const key = c.req.query("key");
+	const uploadId = c.req.query("uploadId");
+	const partNumber = parseInt(c.req.query("partNumber") || "0");
 
-  if (!key || !uploadId || !partNumber) {
-    return c.json({
-      success: false,
-      error: 'Missing required parameters: key, uploadId, partNumber',
-    }, 400);
-  }
+	if (!key || !uploadId || !partNumber) {
+		return c.json(
+			{
+				success: false,
+				error: "Missing required parameters: key, uploadId, partNumber",
+			},
+			400,
+		);
+	}
 
-  if (partNumber < 1 || partNumber > 10000) {
-    return c.json({
-      success: false,
-      error: 'Part number must be between 1 and 10000',
-    }, 400);
-  }
+	if (partNumber < 1 || partNumber > 10000) {
+		return c.json(
+			{
+				success: false,
+				error: "Part number must be between 1 and 10000",
+			},
+			400,
+		);
+	}
 
-  try {
-    const body = await c.req.arrayBuffer();
+	try {
+		const body = await c.req.arrayBuffer();
 
-    // Resume the multipart upload
-    const multipart = c.env.MY_BUCKET.resumeMultipartUpload(key, uploadId);
+		// Resume the multipart upload
+		const multipart = c.env.MY_BUCKET.resumeMultipartUpload(key, uploadId);
 
-    // Upload the part
-    const uploadedPart = await multipart.uploadPart(partNumber, body);
+		// Upload the part
+		const uploadedPart = await multipart.uploadPart(partNumber, body);
 
-    return c.json({
-      success: true,
-      partNumber: uploadedPart.partNumber,
-      etag: uploadedPart.etag,
-    });
-  } catch (error: any) {
-    console.error('Upload part error:', error.message);
-    return c.json({
-      success: false,
-      error: 'Failed to upload part',
-      details: error.message,
-    }, 500);
-  }
+		return c.json({
+			success: true,
+			partNumber: uploadedPart.partNumber,
+			etag: uploadedPart.etag,
+		});
+	} catch (error: any) {
+		console.error("Upload part error:", error.message);
+		return c.json(
+			{
+				success: false,
+				error: "Failed to upload part",
+				details: error.message,
+			},
+			500,
+		);
+	}
 });
 
 // Complete multipart upload
-app.post('/mpu/complete', async (c) => {
-  const { key, uploadId, parts } = await c.req.json<{
-    key: string;
-    uploadId: string;
-    parts: Array<{ partNumber: number; etag: string }>;
-  }>();
+app.post("/mpu/complete", async (c) => {
+	const { key, uploadId, parts } = await c.req.json<{
+		key: string;
+		uploadId: string;
+		parts: Array<{ partNumber: number; etag: string }>;
+	}>();
 
-  if (!key || !uploadId || !parts || !Array.isArray(parts)) {
-    return c.json({
-      success: false,
-      error: 'Missing required fields: key, uploadId, parts',
-    }, 400);
-  }
+	if (!key || !uploadId || !parts || !Array.isArray(parts)) {
+		return c.json(
+			{
+				success: false,
+				error: "Missing required fields: key, uploadId, parts",
+			},
+			400,
+		);
+	}
 
-  try {
-    const multipart = c.env.MY_BUCKET.resumeMultipartUpload(key, uploadId);
+	try {
+		const multipart = c.env.MY_BUCKET.resumeMultipartUpload(key, uploadId);
 
-    // Complete the upload
-    const object = await multipart.complete(parts);
+		// Complete the upload
+		const object = await multipart.complete(parts);
 
-    return c.json({
-      success: true,
-      key: object.key,
-      size: object.size,
-      etag: object.etag,
-      uploaded: object.uploaded,
-    });
-  } catch (error: any) {
-    console.error('Complete multipart error:', error.message);
-    return c.json({
-      success: false,
-      error: 'Failed to complete multipart upload',
-      details: error.message,
-    }, 500);
-  }
+		return c.json({
+			success: true,
+			key: object.key,
+			size: object.size,
+			etag: object.etag,
+			uploaded: object.uploaded,
+		});
+	} catch (error: any) {
+		console.error("Complete multipart error:", error.message);
+		return c.json(
+			{
+				success: false,
+				error: "Failed to complete multipart upload",
+				details: error.message,
+			},
+			500,
+		);
+	}
 });
 
 // Abort multipart upload
-app.delete('/mpu/abort', async (c) => {
-  const key = c.req.query('key');
-  const uploadId = c.req.query('uploadId');
+app.delete("/mpu/abort", async (c) => {
+	const key = c.req.query("key");
+	const uploadId = c.req.query("uploadId");
 
-  if (!key || !uploadId) {
-    return c.json({
-      success: false,
-      error: 'Missing required parameters: key, uploadId',
-    }, 400);
-  }
+	if (!key || !uploadId) {
+		return c.json(
+			{
+				success: false,
+				error: "Missing required parameters: key, uploadId",
+			},
+			400,
+		);
+	}
 
-  try {
-    const multipart = c.env.MY_BUCKET.resumeMultipartUpload(key, uploadId);
-    await multipart.abort();
+	try {
+		const multipart = c.env.MY_BUCKET.resumeMultipartUpload(key, uploadId);
+		await multipart.abort();
 
-    return c.json({
-      success: true,
-      message: 'Multipart upload aborted',
-      key,
-      uploadId,
-    });
-  } catch (error: any) {
-    console.error('Abort multipart error:', error.message);
-    return c.json({
-      success: false,
-      error: 'Failed to abort multipart upload',
-    }, 500);
-  }
+		return c.json({
+			success: true,
+			message: "Multipart upload aborted",
+			key,
+			uploadId,
+		});
+	} catch (error: any) {
+		console.error("Abort multipart error:", error.message);
+		return c.json(
+			{
+				success: false,
+				error: "Failed to abort multipart upload",
+			},
+			500,
+		);
+	}
 });
 
 // Health check
-app.get('/health', (c) => {
-  return c.json({
-    status: 'healthy',
-    service: 'r2-multipart-worker',
-    timestamp: new Date().toISOString(),
-  });
+app.get("/health", (c) => {
+	return c.json({
+		status: "healthy",
+		service: "r2-multipart-worker",
+		timestamp: new Date().toISOString(),
+	});
 });
 
 export default app;

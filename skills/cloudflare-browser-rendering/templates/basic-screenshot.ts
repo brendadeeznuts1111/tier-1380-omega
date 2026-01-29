@@ -4,61 +4,64 @@
 import puppeteer from "@cloudflare/puppeteer";
 
 interface Env {
-  MYBROWSER: Fetcher;
+	MYBROWSER: Fetcher;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get("url");
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const { searchParams } = new URL(request.url);
+		const url = searchParams.get("url");
 
-    if (!url) {
-      return new Response("Missing ?url parameter. Example: ?url=https://example.com", {
-        status: 400,
-      });
-    }
+		if (!url) {
+			return new Response(
+				"Missing ?url parameter. Example: ?url=https://example.com",
+				{
+					status: 400,
+				},
+			);
+		}
 
-    let normalizedUrl: string;
-    try {
-      normalizedUrl = new URL(url).toString();
-    } catch {
-      return new Response("Invalid URL", { status: 400 });
-    }
+		let normalizedUrl: string;
+		try {
+			normalizedUrl = new URL(url).toString();
+		} catch {
+			return new Response("Invalid URL", { status: 400 });
+		}
 
-    // Launch browser
-    const browser = await puppeteer.launch(env.MYBROWSER);
+		// Launch browser
+		const browser = await puppeteer.launch(env.MYBROWSER);
 
-    try {
-      // Create new page
-      const page = await browser.newPage();
+		try {
+			// Create new page
+			const page = await browser.newPage();
 
-      // Navigate to URL
-      await page.goto(normalizedUrl, {
-        waitUntil: "networkidle0", // Wait for network to be idle
-        timeout: 30000, // 30 second timeout
-      });
+			// Navigate to URL
+			await page.goto(normalizedUrl, {
+				waitUntil: "networkidle0", // Wait for network to be idle
+				timeout: 30000, // 30 second timeout
+			});
 
-      // Take screenshot
-      const screenshot = await page.screenshot({
-        fullPage: true, // Capture full scrollable page
-        type: "png",
-      });
+			// Take screenshot
+			const screenshot = await page.screenshot({
+				fullPage: true, // Capture full scrollable page
+				type: "png",
+			});
 
-      // Clean up
-      await browser.close();
+			// Clean up
+			await browser.close();
 
-      return new Response(screenshot, {
-        headers: {
-          "content-type": "image/png",
-          "cache-control": "public, max-age=3600", // Cache for 1 hour
-        },
-      });
-    } catch (error) {
-      // Always close browser on error
-      await browser.close();
-      throw error;
-    }
-  },
+			return new Response(screenshot, {
+				headers: {
+					"content-type": "image/png",
+					"cache-control": "public, max-age=3600", // Cache for 1 hour
+				},
+			});
+		} catch (error) {
+			// Always close browser on error
+			await browser.close();
+			throw error;
+		}
+	},
 };
 
 /**

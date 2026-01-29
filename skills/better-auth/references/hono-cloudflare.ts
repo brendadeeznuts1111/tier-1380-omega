@@ -8,12 +8,18 @@
  * @package hono@4.x
  */
 
-import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, organization, twoFactor, oauthProvider, jwt } from "better-auth/plugins";
+import {
+	admin,
+	jwt,
+	oauthProvider,
+	organization,
+	twoFactor,
+} from "better-auth/plugins";
 import { drizzle } from "drizzle-orm/d1";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 import * as schema from "./db/schema";
 
 // ============================================================================
@@ -21,13 +27,13 @@ import * as schema from "./db/schema";
 // ============================================================================
 
 interface Env {
-  DB: D1Database;
-  BETTER_AUTH_SECRET: string;
-  BETTER_AUTH_URL: string;
-  GOOGLE_CLIENT_ID?: string;
-  GOOGLE_CLIENT_SECRET?: string;
-  GITHUB_CLIENT_ID?: string;
-  GITHUB_CLIENT_SECRET?: string;
+	DB: D1Database;
+	BETTER_AUTH_SECRET: string;
+	BETTER_AUTH_URL: string;
+	GOOGLE_CLIENT_ID?: string;
+	GOOGLE_CLIENT_SECRET?: string;
+	GITHUB_CLIENT_ID?: string;
+	GITHUB_CLIENT_SECRET?: string;
 }
 
 // ============================================================================
@@ -41,59 +47,61 @@ interface Env {
  * because env bindings are only available in request context.
  */
 export function createAuth(env: Env) {
-  const db = drizzle(env.DB, { schema });
+	const db = drizzle(env.DB, { schema });
 
-  return betterAuth({
-    secret: env.BETTER_AUTH_SECRET,
-    baseURL: env.BETTER_AUTH_URL,
+	return betterAuth({
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
 
-    database: drizzleAdapter(db, { provider: "sqlite" }),
+		database: drizzleAdapter(db, { provider: "sqlite" }),
 
-    // Email + Password Authentication
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: false, // Enable in production
-    },
+		// Email + Password Authentication
+		emailAndPassword: {
+			enabled: true,
+			requireEmailVerification: false, // Enable in production
+		},
 
-    // Social Providers (optional)
-    socialProviders: {
-      ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-          scope: ["openid", "email", "profile"],
-        },
-      }),
-      ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET && {
-        github: {
-          clientId: env.GITHUB_CLIENT_ID,
-          clientSecret: env.GITHUB_CLIENT_SECRET,
-          scope: ["user:email", "read:user"],
-        },
-      }),
-    },
+		// Social Providers (optional)
+		socialProviders: {
+			...(env.GOOGLE_CLIENT_ID &&
+				env.GOOGLE_CLIENT_SECRET && {
+					google: {
+						clientId: env.GOOGLE_CLIENT_ID,
+						clientSecret: env.GOOGLE_CLIENT_SECRET,
+						scope: ["openid", "email", "profile"],
+					},
+				}),
+			...(env.GITHUB_CLIENT_ID &&
+				env.GITHUB_CLIENT_SECRET && {
+					github: {
+						clientId: env.GITHUB_CLIENT_ID,
+						clientSecret: env.GITHUB_CLIENT_SECRET,
+						scope: ["user:email", "read:user"],
+					},
+				}),
+		},
 
-    // Session Configuration
-    session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // Update every 24 hours
-    },
+		// Session Configuration
+		session: {
+			expiresIn: 60 * 60 * 24 * 7, // 7 days
+			updateAge: 60 * 60 * 24, // Update every 24 hours
+		},
 
-    // Plugins
-    plugins: [
-      twoFactor(),
-      organization(),
-      admin({
-        allowImpersonatingAdmins: false, // v1.4.6+ default
-      }),
-      // Uncomment for OAuth provider capabilities:
-      // jwt(),
-      // oauthProvider({
-      //   accessTokenExpiresIn: 3600,
-      //   refreshTokenExpiresIn: 2592000,
-      // }),
-    ],
-  });
+		// Plugins
+		plugins: [
+			twoFactor(),
+			organization(),
+			admin({
+				allowImpersonatingAdmins: false, // v1.4.6+ default
+			}),
+			// Uncomment for OAuth provider capabilities:
+			// jwt(),
+			// oauthProvider({
+			//   accessTokenExpiresIn: 3600,
+			//   refreshTokenExpiresIn: 2592000,
+			// }),
+		],
+	});
 }
 
 // Type helper for the auth instance
@@ -107,20 +115,20 @@ const app = new Hono<{ Bindings: Env }>();
 
 // CORS middleware for SPA clients
 app.use(
-  "/api/auth/*",
-  cors({
-    origin: (origin) => origin, // Or specify allowed origins
-    credentials: true,
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  })
+	"/api/auth/*",
+	cors({
+		origin: (origin) => origin, // Or specify allowed origins
+		credentials: true,
+		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		allowHeaders: ["Content-Type", "Authorization"],
+	}),
 );
 
 // Mount better-auth handler
 // Handles all /api/auth/* routes automatically
 app.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  const auth = createAuth(c.env);
-  return auth.handler(c.req.raw);
+	const auth = createAuth(c.env);
+	return auth.handler(c.req.raw);
 });
 
 // ============================================================================
@@ -134,27 +142,27 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) => {
  * app.use("/api/protected/*", authMiddleware);
  */
 app.use("/api/protected/*", async (c, next) => {
-  const auth = createAuth(c.env);
+	const auth = createAuth(c.env);
 
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-  // Attach user and session to context for downstream handlers
-  c.set("user", session.user);
-  c.set("session", session.session);
+	// Attach user and session to context for downstream handlers
+	c.set("user", session.user);
+	c.set("session", session.session);
 
-  await next();
+	await next();
 });
 
 // Example protected route
 app.get("/api/protected/profile", async (c) => {
-  const user = c.get("user");
-  return c.json({ user });
+	const user = c.get("user");
+	return c.json({ user });
 });
 
 // ============================================================================
@@ -166,37 +174,37 @@ app.get("/api/protected/profile", async (c) => {
  * Requires user to have 'admin' role.
  */
 app.use("/api/admin/*", async (c, next) => {
-  const auth = createAuth(c.env);
+	const auth = createAuth(c.env);
 
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+	if (!session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
-  // Check for admin role
-  if (session.user.role !== "admin") {
-    return c.json({ error: "Forbidden" }, 403);
-  }
+	// Check for admin role
+	if (session.user.role !== "admin") {
+		return c.json({ error: "Forbidden" }, 403);
+	}
 
-  c.set("user", session.user);
-  c.set("session", session.session);
+	c.set("user", session.user);
+	c.set("session", session.session);
 
-  await next();
+	await next();
 });
 
 // Example admin route
 app.get("/api/admin/users", async (c) => {
-  const auth = createAuth(c.env);
+	const auth = createAuth(c.env);
 
-  const users = await auth.api.listUsers({
-    query: { limit: 50 },
-    headers: c.req.raw.headers,
-  });
+	const users = await auth.api.listUsers({
+		query: { limit: 50 },
+		headers: c.req.raw.headers,
+	});
 
-  return c.json(users);
+	return c.json(users);
 });
 
 // ============================================================================
@@ -204,7 +212,7 @@ app.get("/api/admin/users", async (c) => {
 // ============================================================================
 
 app.get("/health", (c) => {
-  return c.json({ status: "ok", timestamp: new Date().toISOString() });
+	return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 export default app;
@@ -214,24 +222,24 @@ export default app;
 // ============================================================================
 
 declare module "hono" {
-  interface ContextVariableMap {
-    user: {
-      id: string;
-      email: string;
-      name: string | null;
-      image: string | null;
-      role: string | null;
-      emailVerified: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-    session: {
-      id: string;
-      userId: string;
-      expiresAt: Date;
-      token: string;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-  }
+	interface ContextVariableMap {
+		user: {
+			id: string;
+			email: string;
+			name: string | null;
+			image: string | null;
+			role: string | null;
+			emailVerified: boolean;
+			createdAt: Date;
+			updatedAt: Date;
+		};
+		session: {
+			id: string;
+			userId: string;
+			expiresAt: Date;
+			token: string;
+			createdAt: Date;
+			updatedAt: Date;
+		};
+	}
 }

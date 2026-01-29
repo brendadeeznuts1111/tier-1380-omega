@@ -38,27 +38,30 @@
  * - SDK_SLACK_WEBHOOK_URL: Slack webhook URL
  */
 
-// Core exports
-export { loadConfig, validateConfig, type SDKConfig, type ExecutionMode } from './config';
-export {
-  SDKError,
-  AuthError,
-  ValidationError,
-  NotFoundError,
-  RateLimitError,
-  MCPError,
-  NetworkError,
-} from './errors';
-export { MCPClient, defaultClient, type MCPResponse } from './client';
-
-// Direct DB exports
-export * as db from './db';
-export { DBClient, db as dbClient } from './db';
-
 // Direct API exports
-export * as api from './api';
-export { gemini, workersAI, slack, webhook, triggerN8n } from './api';
-export * as holidays from './api/public/holidays';
+export * as api from "./api";
+export { gemini, slack, triggerN8n, webhook, workersAI } from "./api";
+export * as holidays from "./api/public/holidays";
+export { defaultClient, MCPClient, type MCPResponse } from "./client";
+// Core exports
+export {
+	type ExecutionMode,
+	loadConfig,
+	type SDKConfig,
+	validateConfig,
+} from "./config";
+// Direct DB exports
+export * as db from "./db";
+export { DBClient, db as dbClient } from "./db";
+export {
+	AuthError,
+	MCPError,
+	NetworkError,
+	NotFoundError,
+	RateLimitError,
+	SDKError,
+	ValidationError,
+} from "./errors";
 
 // Module exports (uncomment and add as you generate modules)
 // export { docs } from './docs';

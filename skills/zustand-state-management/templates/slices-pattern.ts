@@ -15,167 +15,150 @@
  * Learn more: See SKILL.md Issue #5 for TypeScript complexity handling
  */
 
-import { create, StateCreator } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { create, type StateCreator } from "zustand";
+import { devtools } from "zustand/middleware";
 
 // ============================================================================
 // SLICE 1: User Management
 // ============================================================================
 
 interface User {
-  id: string
-  name: string
-  email: string
+	id: string;
+	name: string;
+	email: string;
 }
 
 interface UserSlice {
-  user: User | null
-  isAuthenticated: boolean
-  setUser: (user: User) => void
-  logout: () => void
+	user: User | null;
+	isAuthenticated: boolean;
+	setUser: (user: User) => void;
+	logout: () => void;
 }
 
 const createUserSlice: StateCreator<
-  UserSlice & CartSlice & NotificationSlice,  // Combined type
-  [['zustand/devtools', never]],               // Middleware mutators
-  [],                                          // Chained middleware
-  UserSlice                                     // This slice's type
+	UserSlice & CartSlice & NotificationSlice, // Combined type
+	[["zustand/devtools", never]], // Middleware mutators
+	[], // Chained middleware
+	UserSlice // This slice's type
 > = (set) => ({
-  user: null,
-  isAuthenticated: false,
+	user: null,
+	isAuthenticated: false,
 
-  setUser: (user) =>
-    set(
-      { user, isAuthenticated: true },
-      undefined,
-      'user/setUser',
-    ),
+	setUser: (user) =>
+		set({ user, isAuthenticated: true }, undefined, "user/setUser"),
 
-  logout: () =>
-    set(
-      { user: null, isAuthenticated: false },
-      undefined,
-      'user/logout',
-    ),
-})
+	logout: () =>
+		set({ user: null, isAuthenticated: false }, undefined, "user/logout"),
+});
 
 // ============================================================================
 // SLICE 2: Shopping Cart
 // ============================================================================
 
 interface CartItem {
-  id: string
-  name: string
-  price: number
-  quantity: number
+	id: string;
+	name: string;
+	price: number;
+	quantity: number;
 }
 
 interface CartSlice {
-  items: CartItem[]
-  addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  clearCart: () => void
-  // Access other slices
-  eatFish: () => void // Example: cross-slice action
+	items: CartItem[];
+	addItem: (item: CartItem) => void;
+	removeItem: (id: string) => void;
+	clearCart: () => void;
+	// Access other slices
+	eatFish: () => void; // Example: cross-slice action
 }
 
 const createCartSlice: StateCreator<
-  UserSlice & CartSlice & NotificationSlice,
-  [['zustand/devtools', never]],
-  [],
-  CartSlice
+	UserSlice & CartSlice & NotificationSlice,
+	[["zustand/devtools", never]],
+	[],
+	CartSlice
 > = (set, get) => ({
-  items: [],
+	items: [],
 
-  addItem: (item) =>
-    set(
-      (state) => ({
-        items: [...state.items, item],
-      }),
-      undefined,
-      'cart/addItem',
-    ),
+	addItem: (item) =>
+		set(
+			(state) => ({
+				items: [...state.items, item],
+			}),
+			undefined,
+			"cart/addItem",
+		),
 
-  removeItem: (id) =>
-    set(
-      (state) => ({
-        items: state.items.filter((item) => item.id !== id),
-      }),
-      undefined,
-      'cart/removeItem',
-    ),
+	removeItem: (id) =>
+		set(
+			(state) => ({
+				items: state.items.filter((item) => item.id !== id),
+			}),
+			undefined,
+			"cart/removeItem",
+		),
 
-  clearCart: () =>
-    set(
-      { items: [] },
-      undefined,
-      'cart/clearCart',
-    ),
+	clearCart: () => set({ items: [] }, undefined, "cart/clearCart"),
 
-  // Example: Action that accesses another slice
-  eatFish: () =>
-    set(
-      (state) => ({
-        // Access notification slice
-        notifications: state.notifications + 1,
-      }),
-      undefined,
-      'cart/eatFish',
-    ),
-})
+	// Example: Action that accesses another slice
+	eatFish: () =>
+		set(
+			(state) => ({
+				// Access notification slice
+				notifications: state.notifications + 1,
+			}),
+			undefined,
+			"cart/eatFish",
+		),
+});
 
 // ============================================================================
 // SLICE 3: Notifications
 // ============================================================================
 
 interface NotificationSlice {
-  notifications: number
-  messages: string[]
-  addNotification: (message: string) => void
-  clearNotifications: () => void
+	notifications: number;
+	messages: string[];
+	addNotification: (message: string) => void;
+	clearNotifications: () => void;
 }
 
 const createNotificationSlice: StateCreator<
-  UserSlice & CartSlice & NotificationSlice,
-  [['zustand/devtools', never]],
-  [],
-  NotificationSlice
+	UserSlice & CartSlice & NotificationSlice,
+	[["zustand/devtools", never]],
+	[],
+	NotificationSlice
 > = (set) => ({
-  notifications: 0,
-  messages: [],
+	notifications: 0,
+	messages: [],
 
-  addNotification: (message) =>
-    set(
-      (state) => ({
-        notifications: state.notifications + 1,
-        messages: [...state.messages, message],
-      }),
-      undefined,
-      'notifications/add',
-    ),
+	addNotification: (message) =>
+		set(
+			(state) => ({
+				notifications: state.notifications + 1,
+				messages: [...state.messages, message],
+			}),
+			undefined,
+			"notifications/add",
+		),
 
-  clearNotifications: () =>
-    set(
-      { notifications: 0, messages: [] },
-      undefined,
-      'notifications/clear',
-    ),
-})
+	clearNotifications: () =>
+		set({ notifications: 0, messages: [] }, undefined, "notifications/clear"),
+});
 
 // ============================================================================
 // COMBINE SLICES
 // ============================================================================
 
 export const useAppStore = create<UserSlice & CartSlice & NotificationSlice>()(
-  devtools(
-    (...a) => ({
-      ...createUserSlice(...a),
-      ...createCartSlice(...a),
-      ...createNotificationSlice(...a),
-    }),
-    { name: 'AppStore' },
-  ),
-)
+	devtools(
+		(...a) => ({
+			...createUserSlice(...a),
+			...createCartSlice(...a),
+			...createNotificationSlice(...a),
+		}),
+		{ name: "AppStore" },
+	),
+);
 
 /**
  * Usage in components:

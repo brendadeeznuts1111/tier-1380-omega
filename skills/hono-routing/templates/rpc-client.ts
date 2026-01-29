@@ -192,7 +192,7 @@ async function postsExample() {
 // FRONTEND USAGE (REACT EXAMPLE)
 // ============================================================================
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 function UsersComponent() {
   const [users, setUsers] = useState([])
@@ -239,12 +239,11 @@ function UsersComponent() {
   return (
     <div>
       <h1>Users</h1>
-      <ul>
-        {users.map((user) => (
+      <ul>users.map((user) => (
           <li key={user.id}>
             {user.name} ({user.email})
           </li>
-        ))}
+        ))
       </ul>
     </div>
   )

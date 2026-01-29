@@ -1,7 +1,7 @@
-import { defineConfig } from 'tinacms'
-import { blogPostCollection } from './collections/blog-post'
-import { docPageCollection } from './collections/doc-page'
-import { authorCollection } from './collections/author'
+import { defineConfig } from "tinacms";
+import { authorCollection } from "./collections/author";
+import { blogPostCollection } from "./collections/blog-post";
+import { docPageCollection } from "./collections/doc-page";
 
 /**
  * TinaCMS Configuration for Next.js Pages Router
@@ -23,42 +23,38 @@ import { authorCollection } from './collections/author'
 
 // Get Git branch from environment
 const branch =
-  process.env.GITHUB_BRANCH ||
-  process.env.VERCEL_GIT_COMMIT_REF ||
-  process.env.HEAD ||
-  'main'
+	process.env.GITHUB_BRANCH ||
+	process.env.VERCEL_GIT_COMMIT_REF ||
+	process.env.HEAD ||
+	"main";
 
 export default defineConfig({
-  // Git branch to use
-  branch,
+	// Git branch to use
+	branch,
 
-  // TinaCloud credentials (get from https://app.tina.io)
-  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
-  token: process.env.TINA_TOKEN,
+	// TinaCloud credentials (get from https://app.tina.io)
+	clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
+	token: process.env.TINA_TOKEN,
 
-  // Build configuration
-  build: {
-    outputFolder: 'admin',
-    publicFolder: 'public',
-  },
+	// Build configuration
+	build: {
+		outputFolder: "admin",
+		publicFolder: "public",
+	},
 
-  // Media configuration
-  media: {
-    tina: {
-      mediaRoot: 'uploads',
-      publicFolder: 'public',
-    },
-  },
+	// Media configuration
+	media: {
+		tina: {
+			mediaRoot: "uploads",
+			publicFolder: "public",
+		},
+	},
 
-  // Content schema
-  schema: {
-    collections: [
-      blogPostCollection,
-      authorCollection,
-      docPageCollection,
-    ],
-  },
+	// Content schema
+	schema: {
+		collections: [blogPostCollection, authorCollection, docPageCollection],
+	},
 
-  // Optional: Self-hosted backend configuration
-  // contentApiUrlOverride: '/api/tina/gql',
-})
+	// Optional: Self-hosted backend configuration
+	// contentApiUrlOverride: '/api/tina/gql',
+});

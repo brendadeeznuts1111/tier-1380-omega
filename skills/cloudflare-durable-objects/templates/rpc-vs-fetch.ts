@@ -7,11 +7,11 @@
  * - When to use each pattern
  */
 
-import { DurableObject, DurableObjectState } from 'cloudflare:workers';
+import { DurableObject, type DurableObjectState } from "cloudflare:workers";
 
 interface Env {
-  RPC_EXAMPLE: DurableObjectNamespace<RpcExample>;
-  FETCH_EXAMPLE: DurableObjectNamespace<FetchExample>;
+	RPC_EXAMPLE: DurableObjectNamespace<RpcExample>;
+	FETCH_EXAMPLE: DurableObjectNamespace<FetchExample>;
 }
 
 /**
@@ -24,71 +24,71 @@ interface Env {
  * - Auto-serialization of structured data
  */
 export class RpcExample extends DurableObject<Env> {
-  count: number = 0;
+	count: number = 0;
 
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
+	constructor(ctx: DurableObjectState, env: Env) {
+		super(ctx, env);
 
-    ctx.blockConcurrencyWhile(async () => {
-      this.count = await ctx.storage.get<number>('count') || 0;
-    });
-  }
+		ctx.blockConcurrencyWhile(async () => {
+			this.count = (await ctx.storage.get<number>("count")) || 0;
+		});
+	}
 
-  // Public RPC methods (automatically exposed)
-  async increment(): Promise<number> {
-    this.count += 1;
-    await this.ctx.storage.put('count', this.count);
-    return this.count;
-  }
+	// Public RPC methods (automatically exposed)
+	async increment(): Promise<number> {
+		this.count += 1;
+		await this.ctx.storage.put("count", this.count);
+		return this.count;
+	}
 
-  async decrement(): Promise<number> {
-    this.count -= 1;
-    await this.ctx.storage.put('count', this.count);
-    return this.count;
-  }
+	async decrement(): Promise<number> {
+		this.count -= 1;
+		await this.ctx.storage.put("count", this.count);
+		return this.count;
+	}
 
-  async get(): Promise<number> {
-    return this.count;
-  }
+	async get(): Promise<number> {
+		return this.count;
+	}
 
-  async reset(): Promise<void> {
-    this.count = 0;
-    await this.ctx.storage.put('count', 0);
-  }
+	async reset(): Promise<void> {
+		this.count = 0;
+		await this.ctx.storage.put("count", 0);
+	}
 
-  // Complex return types work seamlessly
-  async getStats(): Promise<{ count: number; timestamp: number }> {
-    return {
-      count: this.count,
-      timestamp: Date.now(),
-    };
-  }
+	// Complex return types work seamlessly
+	async getStats(): Promise<{ count: number; timestamp: number }> {
+		return {
+			count: this.count,
+			timestamp: Date.now(),
+		};
+	}
 
-  // Methods can accept complex parameters
-  async addMultiple(numbers: number[]): Promise<number> {
-    const sum = numbers.reduce((acc, n) => acc + n, 0);
-    this.count += sum;
-    await this.ctx.storage.put('count', this.count);
-    return this.count;
-  }
+	// Methods can accept complex parameters
+	async addMultiple(numbers: number[]): Promise<number> {
+		const sum = numbers.reduce((acc, n) => acc + n, 0);
+		this.count += sum;
+		await this.ctx.storage.put("count", this.count);
+		return this.count;
+	}
 }
 
 /**
  * Worker using RPC pattern
  */
 const rpcWorker = {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // Get stub
-    const stub = env.RPC_EXAMPLE.getByName('my-counter');
+	async fetch(request: Request, env: Env): Promise<Response> {
+		// Get stub
+		const stub = env.RPC_EXAMPLE.getByName("my-counter");
 
-    // Call RPC methods directly (type-safe)
-    const count = await stub.increment();
-    const stats = await stub.getStats();
+		// Call RPC methods directly (type-safe)
+		const count = await stub.increment();
+		const stats = await stub.getStats();
 
-    return new Response(JSON.stringify({ count, stats }), {
-      headers: { 'content-type': 'application/json' },
-    });
-  },
+		return new Response(JSON.stringify({ count, stats }), {
+			headers: { "content-type": "application/json" },
+		});
+	},
 };
 
 /**
@@ -101,95 +101,98 @@ const rpcWorker = {
  * - Legacy compatibility (pre-2024-04-03)
  */
 export class FetchExample extends DurableObject<Env> {
-  count: number = 0;
+	count: number = 0;
 
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
+	constructor(ctx: DurableObjectState, env: Env) {
+		super(ctx, env);
 
-    ctx.blockConcurrencyWhile(async () => {
-      this.count = await ctx.storage.get<number>('count') || 0;
-    });
-  }
+		ctx.blockConcurrencyWhile(async () => {
+			this.count = (await ctx.storage.get<number>("count")) || 0;
+		});
+	}
 
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
+	async fetch(request: Request): Promise<Response> {
+		const url = new URL(request.url);
 
-    // Route based on path
-    if (url.pathname === '/increment' && request.method === 'POST') {
-      this.count += 1;
-      await this.ctx.storage.put('count', this.count);
+		// Route based on path
+		if (url.pathname === "/increment" && request.method === "POST") {
+			this.count += 1;
+			await this.ctx.storage.put("count", this.count);
 
-      return new Response(JSON.stringify({ count: this.count }), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
+			return new Response(JSON.stringify({ count: this.count }), {
+				headers: { "content-type": "application/json" },
+			});
+		}
 
-    if (url.pathname === '/decrement' && request.method === 'POST') {
-      this.count -= 1;
-      await this.ctx.storage.put('count', this.count);
+		if (url.pathname === "/decrement" && request.method === "POST") {
+			this.count -= 1;
+			await this.ctx.storage.put("count", this.count);
 
-      return new Response(JSON.stringify({ count: this.count }), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
+			return new Response(JSON.stringify({ count: this.count }), {
+				headers: { "content-type": "application/json" },
+			});
+		}
 
-    if (url.pathname === '/get' && request.method === 'GET') {
-      return new Response(JSON.stringify({ count: this.count }), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
+		if (url.pathname === "/get" && request.method === "GET") {
+			return new Response(JSON.stringify({ count: this.count }), {
+				headers: { "content-type": "application/json" },
+			});
+		}
 
-    if (url.pathname === '/reset' && request.method === 'POST') {
-      this.count = 0;
-      await this.ctx.storage.put('count', 0);
+		if (url.pathname === "/reset" && request.method === "POST") {
+			this.count = 0;
+			await this.ctx.storage.put("count", 0);
 
-      return new Response(JSON.stringify({ count: 0 }), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
+			return new Response(JSON.stringify({ count: 0 }), {
+				headers: { "content-type": "application/json" },
+			});
+		}
 
-    // Complex HTTP logic (headers, cookies, etc.)
-    if (url.pathname === '/stats' && request.method === 'GET') {
-      const authHeader = request.headers.get('Authorization');
+		// Complex HTTP logic (headers, cookies, etc.)
+		if (url.pathname === "/stats" && request.method === "GET") {
+			const authHeader = request.headers.get("Authorization");
 
-      if (!authHeader) {
-        return new Response('Unauthorized', { status: 401 });
-      }
+			if (!authHeader) {
+				return new Response("Unauthorized", { status: 401 });
+			}
 
-      return new Response(JSON.stringify({
-        count: this.count,
-        timestamp: Date.now(),
-      }), {
-        headers: {
-          'content-type': 'application/json',
-          'cache-control': 'no-cache',
-        },
-      });
-    }
+			return new Response(
+				JSON.stringify({
+					count: this.count,
+					timestamp: Date.now(),
+				}),
+				{
+					headers: {
+						"content-type": "application/json",
+						"cache-control": "no-cache",
+					},
+				},
+			);
+		}
 
-    return new Response('Not found', { status: 404 });
-  }
+		return new Response("Not found", { status: 404 });
+	}
 }
 
 /**
  * Worker using HTTP fetch pattern
  */
 const fetchWorker = {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // Get stub
-    const stub = env.FETCH_EXAMPLE.getByName('my-counter');
+	async fetch(request: Request, env: Env): Promise<Response> {
+		// Get stub
+		const stub = env.FETCH_EXAMPLE.getByName("my-counter");
 
-    // Call fetch method (HTTP-style)
-    const response = await stub.fetch('https://fake-host/increment', {
-      method: 'POST',
-    });
+		// Call fetch method (HTTP-style)
+		const response = await stub.fetch("https://fake-host/increment", {
+			method: "POST",
+		});
 
-    const data = await response.json();
+		const data = await response.json();
 
-    return new Response(JSON.stringify(data), {
-      headers: { 'content-type': 'application/json' },
-    });
-  },
+		return new Response(JSON.stringify(data), {
+			headers: { "content-type": "application/json" },
+		});
+	},
 };
 
 /**
@@ -200,33 +203,33 @@ const fetchWorker = {
  * - fetch() for WebSocket upgrades or HTTP-specific logic
  */
 export class HybridExample extends DurableObject<Env> {
-  // RPC method
-  async getStatus(): Promise<{ active: boolean; connections: number }> {
-    return {
-      active: true,
-      connections: this.ctx.getWebSockets().length,
-    };
-  }
+	// RPC method
+	async getStatus(): Promise<{ active: boolean; connections: number }> {
+		return {
+			active: true,
+			connections: this.ctx.getWebSockets().length,
+		};
+	}
 
-  // HTTP fetch for WebSocket upgrade
-  async fetch(request: Request): Promise<Response> {
-    const upgradeHeader = request.headers.get('Upgrade');
+	// HTTP fetch for WebSocket upgrade
+	async fetch(request: Request): Promise<Response> {
+		const upgradeHeader = request.headers.get("Upgrade");
 
-    if (upgradeHeader === 'websocket') {
-      // WebSocket upgrade logic
-      const webSocketPair = new WebSocketPair();
-      const [client, server] = Object.values(webSocketPair);
+		if (upgradeHeader === "websocket") {
+			// WebSocket upgrade logic
+			const webSocketPair = new WebSocketPair();
+			const [client, server] = Object.values(webSocketPair);
 
-      this.ctx.acceptWebSocket(server);
+			this.ctx.acceptWebSocket(server);
 
-      return new Response(null, {
-        status: 101,
-        webSocket: client,
-      });
-    }
+			return new Response(null, {
+				status: 101,
+				webSocket: client,
+			});
+		}
 
-    return new Response('Not found', { status: 404 });
-  }
+		return new Response("Not found", { status: 404 });
+	}
 }
 
 // CRITICAL: Export classes

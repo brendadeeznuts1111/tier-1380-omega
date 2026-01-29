@@ -7,93 +7,93 @@
  * Migration: Rename file and function, keep same logic.
  */
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 // ============================================================================
 // Example 1: Basic Proxy (Auth Check)
 // ============================================================================
 
 export function proxy(request: NextRequest) {
-  const token = request.cookies.get('token')
+	const token = request.cookies.get("token");
 
-  // Redirect to login if no token
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+	// Redirect to login if no token
+	if (!token) {
+		return NextResponse.redirect(new URL("/login", request.url));
+	}
 
-  return NextResponse.next()
+	return NextResponse.next();
 }
 
 export const config = {
-  matcher: '/dashboard/:path*',
-}
+	matcher: "/dashboard/:path*",
+};
 
 // ============================================================================
 // Example 2: Advanced Proxy (Multiple Checks)
 // ============================================================================
 
 export function advancedProxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
+	const { pathname } = request.nextUrl;
 
-  // 1. Auth check
-  const token = request.cookies.get('token')
-  if (pathname.startsWith('/dashboard') && !token) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+	// 1. Auth check
+	const token = request.cookies.get("token");
+	if (pathname.startsWith("/dashboard") && !token) {
+		return NextResponse.redirect(new URL("/login", request.url));
+	}
 
-  // 2. Role-based access
-  const userRole = request.cookies.get('role')?.value
-  if (pathname.startsWith('/admin') && userRole !== 'admin') {
-    return NextResponse.redirect(new URL('/unauthorized', request.url))
-  }
+	// 2. Role-based access
+	const userRole = request.cookies.get("role")?.value;
+	if (pathname.startsWith("/admin") && userRole !== "admin") {
+		return NextResponse.redirect(new URL("/unauthorized", request.url));
+	}
 
-  // 3. Add custom headers
-  const response = NextResponse.next()
-  response.headers.set('x-custom-header', 'value')
-  response.headers.set('x-pathname', pathname)
+	// 3. Add custom headers
+	const response = NextResponse.next();
+	response.headers.set("x-custom-header", "value");
+	response.headers.set("x-pathname", pathname);
 
-  return response
+	return response;
 }
 
 export const advancedConfig = {
-  matcher: ['/dashboard/:path*', '/admin/:path*'],
-}
+	matcher: ["/dashboard/:path*", "/admin/:path*"],
+};
 
 // ============================================================================
 // Example 3: Request Rewriting
 // ============================================================================
 
 export function rewriteProxy(request: NextRequest) {
-  // Rewrite /blog/* to /posts/*
-  if (request.nextUrl.pathname.startsWith('/blog')) {
-    const url = request.nextUrl.clone()
-    url.pathname = url.pathname.replace('/blog', '/posts')
-    return NextResponse.rewrite(url)
-  }
+	// Rewrite /blog/* to /posts/*
+	if (request.nextUrl.pathname.startsWith("/blog")) {
+		const url = request.nextUrl.clone();
+		url.pathname = url.pathname.replace("/blog", "/posts");
+		return NextResponse.rewrite(url);
+	}
 
-  return NextResponse.next()
+	return NextResponse.next();
 }
 
 export const rewriteConfig = {
-  matcher: '/blog/:path*',
-}
+	matcher: "/blog/:path*",
+};
 
 // ============================================================================
 // Example 4: Geolocation-Based Routing
 // ============================================================================
 
 export function geoProxy(request: NextRequest) {
-  const country = request.geo?.country || 'US'
-  const url = request.nextUrl.clone()
+	const country = request.geo?.country || "US";
+	const url = request.nextUrl.clone();
 
-  // Redirect to country-specific page
-  if (url.pathname === '/') {
-    url.pathname = `/${country.toLowerCase()}`
-    return NextResponse.rewrite(url)
-  }
+	// Redirect to country-specific page
+	if (url.pathname === "/") {
+		url.pathname = `/${country.toLowerCase()}`;
+		return NextResponse.rewrite(url);
+	}
 
-  return NextResponse.next()
+	return NextResponse.next();
 }
 
 // ============================================================================
@@ -101,95 +101,95 @@ export function geoProxy(request: NextRequest) {
 // ============================================================================
 
 export function abTestProxy(request: NextRequest) {
-  const bucket = request.cookies.get('bucket')?.value
+	const bucket = request.cookies.get("bucket")?.value;
 
-  if (!bucket) {
-    // Assign to A or B randomly
-    const newBucket = Math.random() < 0.5 ? 'a' : 'b'
-    const response = NextResponse.next()
-    response.cookies.set('bucket', newBucket, {
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    })
+	if (!bucket) {
+		// Assign to A or B randomly
+		const newBucket = Math.random() < 0.5 ? "a" : "b";
+		const response = NextResponse.next();
+		response.cookies.set("bucket", newBucket, {
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+		});
 
-    // Rewrite to variant page
-    if (newBucket === 'b') {
-      const url = request.nextUrl.clone()
-      url.pathname = `/variant-b${url.pathname}`
-      return NextResponse.rewrite(url)
-    }
+		// Rewrite to variant page
+		if (newBucket === "b") {
+			const url = request.nextUrl.clone();
+			url.pathname = `/variant-b${url.pathname}`;
+			return NextResponse.rewrite(url);
+		}
 
-    return response
-  }
+		return response;
+	}
 
-  // Existing user
-  if (bucket === 'b') {
-    const url = request.nextUrl.clone()
-    url.pathname = `/variant-b${url.pathname}`
-    return NextResponse.rewrite(url)
-  }
+	// Existing user
+	if (bucket === "b") {
+		const url = request.nextUrl.clone();
+		url.pathname = `/variant-b${url.pathname}`;
+		return NextResponse.rewrite(url);
+	}
 
-  return NextResponse.next()
+	return NextResponse.next();
 }
 
 export const abTestConfig = {
-  matcher: '/',
-}
+	matcher: "/",
+};
 
 // ============================================================================
 // Example 6: Rate Limiting
 // ============================================================================
 
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export function rateLimitProxy(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') || 'unknown'
-  const now = Date.now()
+	const ip = request.headers.get("x-forwarded-for") || "unknown";
+	const now = Date.now();
 
-  // Check rate limit (100 requests per minute)
-  const rateLimit = rateLimitMap.get(ip)
+	// Check rate limit (100 requests per minute)
+	const rateLimit = rateLimitMap.get(ip);
 
-  if (rateLimit) {
-    if (now < rateLimit.resetAt) {
-      if (rateLimit.count >= 100) {
-        return new NextResponse('Too Many Requests', {
-          status: 429,
-          headers: {
-            'Retry-After': String(Math.ceil((rateLimit.resetAt - now) / 1000)),
-          },
-        })
-      }
-      rateLimit.count++
-    } else {
-      rateLimitMap.set(ip, { count: 1, resetAt: now + 60000 }) // 1 minute
-    }
-  } else {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60000 })
-  }
+	if (rateLimit) {
+		if (now < rateLimit.resetAt) {
+			if (rateLimit.count >= 100) {
+				return new NextResponse("Too Many Requests", {
+					status: 429,
+					headers: {
+						"Retry-After": String(Math.ceil((rateLimit.resetAt - now) / 1000)),
+					},
+				});
+			}
+			rateLimit.count++;
+		} else {
+			rateLimitMap.set(ip, { count: 1, resetAt: now + 60000 }); // 1 minute
+		}
+	} else {
+		rateLimitMap.set(ip, { count: 1, resetAt: now + 60000 });
+	}
 
-  return NextResponse.next()
+	return NextResponse.next();
 }
 
 export const rateLimitConfig = {
-  matcher: '/api/:path*',
-}
+	matcher: "/api/:path*",
+};
 
 // ============================================================================
 // Example 7: Response Modification
 // ============================================================================
 
 export function modifyResponseProxy(request: NextRequest) {
-  const response = NextResponse.next()
+	const response = NextResponse.next();
 
-  // Add security headers
-  response.headers.set('X-Frame-Options', 'DENY')
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
-  response.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=()'
-  )
+	// Add security headers
+	response.headers.set("X-Frame-Options", "DENY");
+	response.headers.set("X-Content-Type-Options", "nosniff");
+	response.headers.set("Referrer-Policy", "origin-when-cross-origin");
+	response.headers.set(
+		"Permissions-Policy",
+		"camera=(), microphone=(), geolocation=()",
+	);
 
-  return response
+	return response;
 }
 
 // ============================================================================

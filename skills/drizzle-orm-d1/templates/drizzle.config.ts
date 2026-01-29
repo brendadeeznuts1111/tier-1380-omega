@@ -1,4 +1,4 @@
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 /**
  * Drizzle Kit Configuration for Cloudflare D1
@@ -10,31 +10,31 @@ import { defineConfig } from 'drizzle-kit';
  * Use environment variables for all sensitive data.
  */
 export default defineConfig({
-  // Schema location (can be a single file or directory)
-  schema: './src/db/schema.ts',
+	// Schema location (can be a single file or directory)
+	schema: "./src/db/schema.ts",
 
-  // Output directory for generated migrations
-  // This should match the migrations_dir in wrangler.jsonc
-  out: './migrations',
+	// Output directory for generated migrations
+	// This should match the migrations_dir in wrangler.jsonc
+	out: "./migrations",
 
-  // Database dialect (D1 is SQLite-based)
-  dialect: 'sqlite',
+	// Database dialect (D1 is SQLite-based)
+	dialect: "sqlite",
 
-  // Driver for connecting to D1 via HTTP API
-  driver: 'd1-http',
+	// Driver for connecting to D1 via HTTP API
+	driver: "d1-http",
 
-  // Cloudflare credentials (from environment variables)
-  dbCredentials: {
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
-    databaseId: process.env.CLOUDFLARE_DATABASE_ID!,
-    token: process.env.CLOUDFLARE_D1_TOKEN!,
-  },
+	// Cloudflare credentials (from environment variables)
+	dbCredentials: {
+		accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
+		databaseId: process.env.CLOUDFLARE_DATABASE_ID!,
+		token: process.env.CLOUDFLARE_D1_TOKEN!,
+	},
 
-  // Enable verbose output for debugging
-  verbose: true,
+	// Enable verbose output for debugging
+	verbose: true,
 
-  // Enable strict mode (recommended)
-  strict: true,
+	// Enable strict mode (recommended)
+	strict: true,
 });
 
 /**

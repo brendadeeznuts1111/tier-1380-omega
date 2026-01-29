@@ -8,9 +8,9 @@
  * traditional SQLite. They're still useful for code reusability and type safety.
  */
 
-import { drizzle } from 'drizzle-orm/d1';
-import { users, posts, comments } from './schema';
-import { eq, and, gte, sql } from 'drizzle-orm';
+import { and, eq, gte, sql } from "drizzle-orm";
+import type { drizzle } from "drizzle-orm/d1";
+import { comments, posts, users } from "./schema";
 
 /**
  * Basic Prepared Statements
@@ -18,11 +18,11 @@ import { eq, and, gte, sql } from 'drizzle-orm';
 
 // Get user by ID (prepared)
 export function prepareGetUserById(db: ReturnType<typeof drizzle>) {
-  return db
-    .select()
-    .from(users)
-    .where(eq(users.id, sql.placeholder('id')))
-    .prepare();
+	return db
+		.select()
+		.from(users)
+		.where(eq(users.id, sql.placeholder("id")))
+		.prepare();
 }
 
 // Usage:
@@ -32,20 +32,20 @@ export function prepareGetUserById(db: ReturnType<typeof drizzle>) {
 
 // Get user by email (prepared)
 export function prepareGetUserByEmail(db: ReturnType<typeof drizzle>) {
-  return db
-    .select()
-    .from(users)
-    .where(eq(users.email, sql.placeholder('email')))
-    .prepare();
+	return db
+		.select()
+		.from(users)
+		.where(eq(users.email, sql.placeholder("email")))
+		.prepare();
 }
 
 // Get posts by author (prepared)
 export function prepareGetPostsByAuthor(db: ReturnType<typeof drizzle>) {
-  return db
-    .select()
-    .from(posts)
-    .where(eq(posts.authorId, sql.placeholder('authorId')))
-    .prepare();
+	return db
+		.select()
+		.from(posts)
+		.where(eq(posts.authorId, sql.placeholder("authorId")))
+		.prepare();
 }
 
 /**
@@ -53,17 +53,19 @@ export function prepareGetPostsByAuthor(db: ReturnType<typeof drizzle>) {
  */
 
 // Get published posts after a date
-export function prepareGetPublishedPostsAfterDate(db: ReturnType<typeof drizzle>) {
-  return db
-    .select()
-    .from(posts)
-    .where(
-      and(
-        eq(posts.published, sql.placeholder('published')),
-        gte(posts.createdAt, sql.placeholder('afterDate'))
-      )
-    )
-    .prepare();
+export function prepareGetPublishedPostsAfterDate(
+	db: ReturnType<typeof drizzle>,
+) {
+	return db
+		.select()
+		.from(posts)
+		.where(
+			and(
+				eq(posts.published, sql.placeholder("published")),
+				gte(posts.createdAt, sql.placeholder("afterDate")),
+			),
+		)
+		.prepare();
 }
 
 // Usage:
@@ -75,13 +77,13 @@ export function prepareGetPublishedPostsAfterDate(db: ReturnType<typeof drizzle>
 
 // Search users by partial email/name match
 export function prepareSearchUsers(db: ReturnType<typeof drizzle>) {
-  return db
-    .select()
-    .from(users)
-    .where(
-      sql`${users.email} LIKE ${sql.placeholder('searchTerm')} OR ${users.name} LIKE ${sql.placeholder('searchTerm')}`
-    )
-    .prepare();
+	return db
+		.select()
+		.from(users)
+		.where(
+			sql`${users.email} LIKE ${sql.placeholder("searchTerm")} OR ${users.name} LIKE ${sql.placeholder("searchTerm")}`,
+		)
+		.prepare();
 }
 
 // Usage:
@@ -94,15 +96,15 @@ export function prepareSearchUsers(db: ReturnType<typeof drizzle>) {
 
 // Insert user (prepared)
 export function prepareInsertUser(db: ReturnType<typeof drizzle>) {
-  return db
-    .insert(users)
-    .values({
-      email: sql.placeholder('email'),
-      name: sql.placeholder('name'),
-      bio: sql.placeholder('bio'),
-    })
-    .returning()
-    .prepare();
+	return db
+		.insert(users)
+		.values({
+			email: sql.placeholder("email"),
+			name: sql.placeholder("name"),
+			bio: sql.placeholder("bio"),
+		})
+		.returning()
+		.prepare();
 }
 
 // Usage:
@@ -115,17 +117,17 @@ export function prepareInsertUser(db: ReturnType<typeof drizzle>) {
 
 // Insert post (prepared)
 export function prepareInsertPost(db: ReturnType<typeof drizzle>) {
-  return db
-    .insert(posts)
-    .values({
-      title: sql.placeholder('title'),
-      slug: sql.placeholder('slug'),
-      content: sql.placeholder('content'),
-      authorId: sql.placeholder('authorId'),
-      published: sql.placeholder('published'),
-    })
-    .returning()
-    .prepare();
+	return db
+		.insert(posts)
+		.values({
+			title: sql.placeholder("title"),
+			slug: sql.placeholder("slug"),
+			content: sql.placeholder("content"),
+			authorId: sql.placeholder("authorId"),
+			published: sql.placeholder("published"),
+		})
+		.returning()
+		.prepare();
 }
 
 /**
@@ -134,15 +136,15 @@ export function prepareInsertPost(db: ReturnType<typeof drizzle>) {
 
 // Update user name (prepared)
 export function prepareUpdateUserName(db: ReturnType<typeof drizzle>) {
-  return db
-    .update(users)
-    .set({
-      name: sql.placeholder('name'),
-      updatedAt: sql.placeholder('updatedAt'),
-    })
-    .where(eq(users.id, sql.placeholder('id')))
-    .returning()
-    .prepare();
+	return db
+		.update(users)
+		.set({
+			name: sql.placeholder("name"),
+			updatedAt: sql.placeholder("updatedAt"),
+		})
+		.where(eq(users.id, sql.placeholder("id")))
+		.returning()
+		.prepare();
 }
 
 // Usage:
@@ -155,15 +157,15 @@ export function prepareUpdateUserName(db: ReturnType<typeof drizzle>) {
 
 // Publish post (prepared)
 export function preparePublishPost(db: ReturnType<typeof drizzle>) {
-  return db
-    .update(posts)
-    .set({
-      published: true,
-      updatedAt: sql.placeholder('updatedAt'),
-    })
-    .where(eq(posts.id, sql.placeholder('id')))
-    .returning()
-    .prepare();
+	return db
+		.update(posts)
+		.set({
+			published: true,
+			updatedAt: sql.placeholder("updatedAt"),
+		})
+		.where(eq(posts.id, sql.placeholder("id")))
+		.returning()
+		.prepare();
 }
 
 /**
@@ -172,20 +174,20 @@ export function preparePublishPost(db: ReturnType<typeof drizzle>) {
 
 // Delete user (prepared)
 export function prepareDeleteUser(db: ReturnType<typeof drizzle>) {
-  return db
-    .delete(users)
-    .where(eq(users.id, sql.placeholder('id')))
-    .returning()
-    .prepare();
+	return db
+		.delete(users)
+		.where(eq(users.id, sql.placeholder("id")))
+		.returning()
+		.prepare();
 }
 
 // Delete posts by author (prepared)
 export function prepareDeletePostsByAuthor(db: ReturnType<typeof drizzle>) {
-  return db
-    .delete(posts)
-    .where(eq(posts.authorId, sql.placeholder('authorId')))
-    .returning()
-    .prepare();
+	return db
+		.delete(posts)
+		.where(eq(posts.authorId, sql.placeholder("authorId")))
+		.returning()
+		.prepare();
 }
 
 /**
@@ -194,57 +196,57 @@ export function prepareDeletePostsByAuthor(db: ReturnType<typeof drizzle>) {
 
 // Create a class to encapsulate all prepared statements
 export class PreparedQueries {
-  private db: ReturnType<typeof drizzle>;
+	private db: ReturnType<typeof drizzle>;
 
-  // Prepared statements
-  private getUserByIdStmt;
-  private getUserByEmailStmt;
-  private insertUserStmt;
-  private updateUserNameStmt;
-  private deleteUserStmt;
+	// Prepared statements
+	private getUserByIdStmt;
+	private getUserByEmailStmt;
+	private insertUserStmt;
+	private updateUserNameStmt;
+	private deleteUserStmt;
 
-  constructor(db: ReturnType<typeof drizzle>) {
-    this.db = db;
+	constructor(db: ReturnType<typeof drizzle>) {
+		this.db = db;
 
-    // Initialize all prepared statements once
-    this.getUserByIdStmt = prepareGetUserById(db);
-    this.getUserByEmailStmt = prepareGetUserByEmail(db);
-    this.insertUserStmt = prepareInsertUser(db);
-    this.updateUserNameStmt = prepareUpdateUserName(db);
-    this.deleteUserStmt = prepareDeleteUser(db);
-  }
+		// Initialize all prepared statements once
+		this.getUserByIdStmt = prepareGetUserById(db);
+		this.getUserByEmailStmt = prepareGetUserByEmail(db);
+		this.insertUserStmt = prepareInsertUser(db);
+		this.updateUserNameStmt = prepareUpdateUserName(db);
+		this.deleteUserStmt = prepareDeleteUser(db);
+	}
 
-  // Convenient methods that use prepared statements
-  async getUserById(id: number) {
-    return await this.getUserByIdStmt.get({ id });
-  }
+	// Convenient methods that use prepared statements
+	async getUserById(id: number) {
+		return await this.getUserByIdStmt.get({ id });
+	}
 
-  async getUserByEmail(email: string) {
-    return await this.getUserByEmailStmt.get({ email });
-  }
+	async getUserByEmail(email: string) {
+		return await this.getUserByEmailStmt.get({ email });
+	}
 
-  async insertUser(data: { email: string; name: string; bio?: string | null }) {
-    const [user] = await this.insertUserStmt.get({
-      email: data.email,
-      name: data.name,
-      bio: data.bio ?? null,
-    });
-    return user;
-  }
+	async insertUser(data: { email: string; name: string; bio?: string | null }) {
+		const [user] = await this.insertUserStmt.get({
+			email: data.email,
+			name: data.name,
+			bio: data.bio ?? null,
+		});
+		return user;
+	}
 
-  async updateUserName(id: number, name: string) {
-    const [user] = await this.updateUserNameStmt.get({
-      id,
-      name,
-      updatedAt: new Date(),
-    });
-    return user;
-  }
+	async updateUserName(id: number, name: string) {
+		const [user] = await this.updateUserNameStmt.get({
+			id,
+			name,
+			updatedAt: new Date(),
+		});
+		return user;
+	}
 
-  async deleteUser(id: number) {
-    const [user] = await this.deleteUserStmt.get({ id });
-    return user;
-  }
+	async deleteUser(id: number) {
+		const [user] = await this.deleteUserStmt.get({ id });
+		return user;
+	}
 }
 
 // Usage:
@@ -296,10 +298,10 @@ export class PreparedQueries {
  * TypeScript Types
  */
 
-import type { InferSelectModel } from 'drizzle-orm';
+import type { InferSelectModel } from "drizzle-orm";
 
 export type PreparedQuery<T> = {
-  all: (params: T) => Promise<any[]>;
-  get: (params: T) => Promise<any | undefined>;
-  run: (params: T) => Promise<any>;
+	all: (params: T) => Promise<any[]>;
+	get: (params: T) => Promise<any | undefined>;
+	run: (params: T) => Promise<any>;
 };

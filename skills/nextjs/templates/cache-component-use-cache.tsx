@@ -262,7 +262,7 @@ async function getCachedPublicContent() {
 
 export async function MixedCachingComponent() {
   // This function call is cached
-  const cachedData = await (async function() {
+  const cachedData = await (async () => {
     'use cache'
     return fetch('https://api.example.com/slow-data').then(r => r.json())
   })()

@@ -7,8 +7,8 @@
  * Example: Blog database with users, posts, and comments
  */
 
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
-import { relations } from 'drizzle-orm';
+import { relations } from "drizzle-orm";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
  * Users Table
@@ -16,37 +16,38 @@ import { relations } from 'drizzle-orm';
  * Stores user accounts with email authentication
  */
 export const users = sqliteTable(
-  'users',
-  {
-    // Primary key with auto-increment
-    id: integer('id').primaryKey({ autoIncrement: true }),
+	"users",
+	{
+		// Primary key with auto-increment
+		id: integer("id").primaryKey({ autoIncrement: true }),
 
-    // Email (required, unique)
-    email: text('email').notNull().unique(),
+		// Email (required, unique)
+		email: text("email").notNull().unique(),
 
-    // Name (required)
-    name: text('name').notNull(),
+		// Name (required)
+		name: text("name").notNull(),
 
-    // Bio (optional, longer text)
-    bio: text('bio'),
+		// Bio (optional, longer text)
+		bio: text("bio"),
 
-    // Created timestamp (integer in Unix milliseconds)
-    // Use integer with mode: 'timestamp' for dates in D1/SQLite
-    createdAt: integer('created_at', { mode: 'timestamp' })
-      .$defaultFn(() => new Date()),
+		// Created timestamp (integer in Unix milliseconds)
+		// Use integer with mode: 'timestamp' for dates in D1/SQLite
+		createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+			() => new Date(),
+		),
 
-    // Updated timestamp (optional)
-    updatedAt: integer('updated_at', { mode: 'timestamp' }),
-  },
-  (table) => {
-    return {
-      // Index on email for fast lookups (already unique, but helps with queries)
-      emailIdx: index('users_email_idx').on(table.email),
+		// Updated timestamp (optional)
+		updatedAt: integer("updated_at", { mode: "timestamp" }),
+	},
+	(table) => {
+		return {
+			// Index on email for fast lookups (already unique, but helps with queries)
+			emailIdx: index("users_email_idx").on(table.email),
 
-      // Index on createdAt for sorting
-      createdAtIdx: index('users_created_at_idx').on(table.createdAt),
-    };
-  }
+			// Index on createdAt for sorting
+			createdAtIdx: index("users_created_at_idx").on(table.createdAt),
+		};
+	},
 );
 
 /**
@@ -55,49 +56,52 @@ export const users = sqliteTable(
  * Stores blog posts written by users
  */
 export const posts = sqliteTable(
-  'posts',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+	"posts",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
 
-    // Title (required)
-    title: text('title').notNull(),
+		// Title (required)
+		title: text("title").notNull(),
 
-    // Slug for URLs (unique)
-    slug: text('slug').notNull().unique(),
+		// Slug for URLs (unique)
+		slug: text("slug").notNull().unique(),
 
-    // Content (required)
-    content: text('content').notNull(),
+		// Content (required)
+		content: text("content").notNull(),
 
-    // Published status (default to false)
-    published: integer('published', { mode: 'boolean' }).notNull().default(false),
+		// Published status (default to false)
+		published: integer("published", { mode: "boolean" })
+			.notNull()
+			.default(false),
 
-    // Foreign key to users table
-    // onDelete: 'cascade' means deleting a user deletes their posts
-    authorId: integer('author_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+		// Foreign key to users table
+		// onDelete: 'cascade' means deleting a user deletes their posts
+		authorId: integer("author_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
 
-    // Timestamps
-    createdAt: integer('created_at', { mode: 'timestamp' })
-      .$defaultFn(() => new Date()),
+		// Timestamps
+		createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+			() => new Date(),
+		),
 
-    updatedAt: integer('updated_at', { mode: 'timestamp' }),
-  },
-  (table) => {
-    return {
-      // Index on slug for URL lookups
-      slugIdx: index('posts_slug_idx').on(table.slug),
+		updatedAt: integer("updated_at", { mode: "timestamp" }),
+	},
+	(table) => {
+		return {
+			// Index on slug for URL lookups
+			slugIdx: index("posts_slug_idx").on(table.slug),
 
-      // Index on authorId for user's posts
-      authorIdx: index('posts_author_idx').on(table.authorId),
+			// Index on authorId for user's posts
+			authorIdx: index("posts_author_idx").on(table.authorId),
 
-      // Index on published + createdAt for listing published posts
-      publishedCreatedIdx: index('posts_published_created_idx').on(
-        table.published,
-        table.createdAt
-      ),
-    };
-  }
+			// Index on published + createdAt for listing published posts
+			publishedCreatedIdx: index("posts_published_created_idx").on(
+				table.published,
+				table.createdAt,
+			),
+		};
+	},
 );
 
 /**
@@ -106,36 +110,37 @@ export const posts = sqliteTable(
  * Stores comments on posts
  */
 export const comments = sqliteTable(
-  'comments',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+	"comments",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
 
-    // Comment content
-    content: text('content').notNull(),
+		// Comment content
+		content: text("content").notNull(),
 
-    // Foreign key to posts (cascade delete)
-    postId: integer('post_id')
-      .notNull()
-      .references(() => posts.id, { onDelete: 'cascade' }),
+		// Foreign key to posts (cascade delete)
+		postId: integer("post_id")
+			.notNull()
+			.references(() => posts.id, { onDelete: "cascade" }),
 
-    // Foreign key to users (cascade delete)
-    authorId: integer('author_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+		// Foreign key to users (cascade delete)
+		authorId: integer("author_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
 
-    // Timestamps
-    createdAt: integer('created_at', { mode: 'timestamp' })
-      .$defaultFn(() => new Date()),
-  },
-  (table) => {
-    return {
-      // Index on postId for post's comments
-      postIdx: index('comments_post_idx').on(table.postId),
+		// Timestamps
+		createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+			() => new Date(),
+		),
+	},
+	(table) => {
+		return {
+			// Index on postId for post's comments
+			postIdx: index("comments_post_idx").on(table.postId),
 
-      // Index on authorId for user's comments
-      authorIdx: index('comments_author_idx').on(table.authorId),
-    };
-  }
+			// Index on authorId for user's comments
+			authorIdx: index("comments_author_idx").on(table.authorId),
+		};
+	},
 );
 
 /**
@@ -147,29 +152,29 @@ export const comments = sqliteTable(
 
 // User has many posts
 export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-  comments: many(comments),
+	posts: many(posts),
+	comments: many(comments),
 }));
 
 // Post belongs to one user, has many comments
 export const postsRelations = relations(posts, ({ one, many }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
-  comments: many(comments),
+	author: one(users, {
+		fields: [posts.authorId],
+		references: [users.id],
+	}),
+	comments: many(comments),
 }));
 
 // Comment belongs to one post and one user
 export const commentsRelations = relations(comments, ({ one }) => ({
-  post: one(posts, {
-    fields: [comments.postId],
-    references: [posts.id],
-  }),
-  author: one(users, {
-    fields: [comments.authorId],
-    references: [users.id],
-  }),
+	post: one(posts, {
+		fields: [comments.postId],
+		references: [posts.id],
+	}),
+	author: one(users, {
+		fields: [comments.authorId],
+		references: [users.id],
+	}),
 }));
 
 /**
@@ -177,7 +182,7 @@ export const commentsRelations = relations(comments, ({ one }) => ({
  *
  * Infer types from schema for use in your application
  */
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 // Select types (for reading from database)
 export type User = InferSelectModel<typeof users>;

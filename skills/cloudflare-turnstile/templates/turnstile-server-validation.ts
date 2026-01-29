@@ -14,23 +14,23 @@
  * Siteverify API Response
  */
 export interface TurnstileResponse {
-  success: boolean
-  challenge_ts?: string // ISO 8601 timestamp
-  hostname?: string     // Hostname where challenge was solved
-  'error-codes'?: string[]
-  action?: string       // Custom action if specified
-  cdata?: string        // Custom data if specified
+	success: boolean;
+	challenge_ts?: string; // ISO 8601 timestamp
+	hostname?: string; // Hostname where challenge was solved
+	"error-codes"?: string[];
+	action?: string; // Custom action if specified
+	cdata?: string; // Custom data if specified
 }
 
 /**
  * Validation Options
  */
 export interface ValidationOptions {
-  remoteip?: string
-  idempotency_key?: string
-  expectedAction?: string
-  expectedHostname?: string
-  timeout?: number // milliseconds (default: 5000)
+	remoteip?: string;
+	idempotency_key?: string;
+	expectedAction?: string;
+	expectedHostname?: string;
+	timeout?: number; // milliseconds (default: 5000)
 }
 
 /**
@@ -42,199 +42,205 @@ export interface ValidationOptions {
  * @returns Promise<TurnstileResponse>
  */
 export async function validateTurnstile(
-  token: string,
-  secretKey: string,
-  options?: ValidationOptions
+	token: string,
+	secretKey: string,
+	options?: ValidationOptions,
 ): Promise<TurnstileResponse> {
-  if (!token) {
-    return {
-      success: false,
-      'error-codes': ['missing-input-response'],
-    }
-  }
+	if (!token) {
+		return {
+			success: false,
+			"error-codes": ["missing-input-response"],
+		};
+	}
 
-  if (!secretKey) {
-    return {
-      success: false,
-      'error-codes': ['missing-input-secret'],
-    }
-  }
+	if (!secretKey) {
+		return {
+			success: false,
+			"error-codes": ["missing-input-secret"],
+		};
+	}
 
-  // Prepare request body
-  const formData = new FormData()
-  formData.append('secret', secretKey)
-  formData.append('response', token)
+	// Prepare request body
+	const formData = new FormData();
+	formData.append("secret", secretKey);
+	formData.append("response", token);
 
-  if (options?.remoteip) {
-    formData.append('remoteip', options.remoteip)
-  }
+	if (options?.remoteip) {
+		formData.append("remoteip", options.remoteip);
+	}
 
-  if (options?.idempotency_key) {
-    formData.append('idempotency_key', options.idempotency_key)
-  }
+	if (options?.idempotency_key) {
+		formData.append("idempotency_key", options.idempotency_key);
+	}
 
-  // Set timeout
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), options?.timeout || 5000)
+	// Set timeout
+	const controller = new AbortController();
+	const timeoutId = setTimeout(
+		() => controller.abort(),
+		options?.timeout || 5000,
+	);
 
-  try {
-    // Call Siteverify API
-    const response = await fetch(
-      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-      {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      }
-    )
+	try {
+		// Call Siteverify API
+		const response = await fetch(
+			"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+			{
+				method: "POST",
+				body: formData,
+				signal: controller.signal,
+			},
+		);
 
-    const result = await response.json<TurnstileResponse>()
+		const result = await response.json<TurnstileResponse>();
 
-    // Additional validation checks
-    if (result.success) {
-      // Validate action if specified
-      if (options?.expectedAction && result.action !== options.expectedAction) {
-        return {
-          success: false,
-          'error-codes': ['action-mismatch'],
-        }
-      }
+		// Additional validation checks
+		if (result.success) {
+			// Validate action if specified
+			if (options?.expectedAction && result.action !== options.expectedAction) {
+				return {
+					success: false,
+					"error-codes": ["action-mismatch"],
+				};
+			}
 
-      // Validate hostname if specified
-      if (options?.expectedHostname && result.hostname !== options.expectedHostname) {
-        return {
-          success: false,
-          'error-codes': ['hostname-mismatch'],
-        }
-      }
-    }
+			// Validate hostname if specified
+			if (
+				options?.expectedHostname &&
+				result.hostname !== options.expectedHostname
+			) {
+				return {
+					success: false,
+					"error-codes": ["hostname-mismatch"],
+				};
+			}
+		}
 
-    return result
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      return {
-        success: false,
-        'error-codes': ['timeout'],
-      }
-    }
+		return result;
+	} catch (error) {
+		if (error.name === "AbortError") {
+			return {
+				success: false,
+				"error-codes": ["timeout"],
+			};
+		}
 
-    console.error('Turnstile validation error:', error)
-    return {
-      success: false,
-      'error-codes': ['internal-error'],
-    }
-  } finally {
-    clearTimeout(timeoutId)
-  }
+		console.error("Turnstile validation error:", error);
+		return {
+			success: false,
+			"error-codes": ["internal-error"],
+		};
+	} finally {
+		clearTimeout(timeoutId);
+	}
 }
 
 /**
  * Cloudflare Workers Example
  */
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    if (request.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405 })
-    }
+	async fetch(request: Request, env: Env): Promise<Response> {
+		if (request.method !== "POST") {
+			return new Response("Method not allowed", { status: 405 });
+		}
 
-    try {
-      const formData = await request.formData()
-      const token = formData.get('cf-turnstile-response')
+		try {
+			const formData = await request.formData();
+			const token = formData.get("cf-turnstile-response");
 
-      if (!token) {
-        return new Response('Missing Turnstile token', { status: 400 })
-      }
+			if (!token) {
+				return new Response("Missing Turnstile token", { status: 400 });
+			}
 
-      // Validate token
-      const result = await validateTurnstile(
-        token.toString(),
-        env.TURNSTILE_SECRET_KEY,
-        {
-          remoteip: request.headers.get('CF-Connecting-IP') || undefined,
-          expectedHostname: new URL(request.url).hostname,
-        }
-      )
+			// Validate token
+			const result = await validateTurnstile(
+				token.toString(),
+				env.TURNSTILE_SECRET_KEY,
+				{
+					remoteip: request.headers.get("CF-Connecting-IP") || undefined,
+					expectedHostname: new URL(request.url).hostname,
+				},
+			);
 
-      if (!result.success) {
-        console.error('Turnstile validation failed:', result['error-codes'])
-        return new Response('Invalid Turnstile token', {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      }
+			if (!result.success) {
+				console.error("Turnstile validation failed:", result["error-codes"]);
+				return new Response("Invalid Turnstile token", {
+					status: 401,
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+			}
 
-      // Token is valid - process the form
-      const email = formData.get('email')
-      const message = formData.get('message')
+			// Token is valid - process the form
+			const email = formData.get("email");
+			const message = formData.get("message");
 
-      // Your business logic here
-      console.log('Form submitted:', { email, message })
+			// Your business logic here
+			console.log("Form submitted:", { email, message });
 
-      return new Response('Success!', {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-      })
-    } catch (error) {
-      console.error('Request handling error:', error)
-      return new Response('Internal server error', { status: 500 })
-    }
-  },
-}
+			return new Response("Success!", {
+				status: 200,
+				headers: {
+					"Content-Type": "text/plain",
+				},
+			});
+		} catch (error) {
+			console.error("Request handling error:", error);
+			return new Response("Internal server error", { status: 500 });
+		}
+	},
+};
 
 /**
  * Advanced Example: Validation with Retry Logic
  */
 export async function validateWithRetry(
-  token: string,
-  secretKey: string,
-  options?: ValidationOptions,
-  maxRetries: number = 3
+	token: string,
+	secretKey: string,
+	options?: ValidationOptions,
+	maxRetries: number = 3,
 ): Promise<TurnstileResponse> {
-  let lastError: TurnstileResponse | null = null
+	let lastError: TurnstileResponse | null = null;
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const result = await validateTurnstile(token, secretKey, options)
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		const result = await validateTurnstile(token, secretKey, options);
 
-    if (result.success) {
-      return result
-    }
+		if (result.success) {
+			return result;
+		}
 
-    // Don't retry on permanent errors
-    const permanentErrors = [
-      'missing-input-secret',
-      'invalid-input-secret',
-      'missing-input-response',
-      'invalid-input-response',
-      'action-mismatch',
-      'hostname-mismatch',
-    ]
+		// Don't retry on permanent errors
+		const permanentErrors = [
+			"missing-input-secret",
+			"invalid-input-secret",
+			"missing-input-response",
+			"invalid-input-response",
+			"action-mismatch",
+			"hostname-mismatch",
+		];
 
-    if (
-      result['error-codes']?.some((code) => permanentErrors.includes(code))
-    ) {
-      return result
-    }
+		if (result["error-codes"]?.some((code) => permanentErrors.includes(code))) {
+			return result;
+		}
 
-    // Retry on transient errors
-    lastError = result
-    if (attempt < maxRetries - 1) {
-      // Exponential backoff
-      await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)))
-    }
-  }
+		// Retry on transient errors
+		lastError = result;
+		if (attempt < maxRetries - 1) {
+			// Exponential backoff
+			await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
+		}
+	}
 
-  return lastError || { success: false, 'error-codes': ['max-retries-exceeded'] }
+	return (
+		lastError || { success: false, "error-codes": ["max-retries-exceeded"] }
+	);
 }
 
 /**
  * Type Definitions for Cloudflare Workers
  */
 export interface Env {
-  TURNSTILE_SECRET_KEY: string
-  TURNSTILE_SITE_KEY: string
-  // Add other environment variables here
+	TURNSTILE_SECRET_KEY: string;
+	TURNSTILE_SITE_KEY: string;
+	// Add other environment variables here
 }

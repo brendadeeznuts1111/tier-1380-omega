@@ -169,7 +169,7 @@ async function retryInMainQueue(message: Message, env: Env) {
 
   // Send back to main queue with exponential delay
   const delaySeconds = Math.min(
-    3600 * Math.pow(2, message.attempts - 3), // Start from where DLQ picked up
+    3600 * 2 ** (message.attempts - 3), // Start from where DLQ picked up
     43200 // Max 12 hours
   );
 

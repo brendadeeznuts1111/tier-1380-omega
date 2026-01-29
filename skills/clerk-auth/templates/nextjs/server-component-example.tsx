@@ -6,60 +6,58 @@
  * CRITICAL (v6): auth() is now async - must use await
  */
 
-import { auth, currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  /**
-   * Option 1: Lightweight auth check
-   *
-   * Use auth() when you only need userId/sessionId
-   * This is faster than currentUser()
-   */
-  const { userId, sessionId } = await auth()
+	/**
+	 * Option 1: Lightweight auth check
+	 *
+	 * Use auth() when you only need userId/sessionId
+	 * This is faster than currentUser()
+	 */
+	const { userId, sessionId } = await auth();
 
-  // Redirect if not authenticated (shouldn't happen if middleware configured)
-  if (!userId) {
-    redirect('/sign-in')
-  }
+	// Redirect if not authenticated (shouldn't happen if middleware configured)
+	if (!userId) {
+		redirect("/sign-in");
+	}
 
-  /**
-   * Option 2: Full user object
-   *
-   * Use currentUser() when you need full user data
-   * Heavier than auth(), so use sparingly
-   */
-  const user = await currentUser()
+	/**
+	 * Option 2: Full user object
+	 *
+	 * Use currentUser() when you need full user data
+	 * Heavier than auth(), so use sparingly
+	 */
+	const user = await currentUser();
 
-  return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+	return (
+		<div className="container mx-auto p-8">
+			<h1 className="text-3xl font-bold">Dashboard</h1>
 
-      <div className="mt-4 space-y-2">
-        <p>
-          <strong>User ID:</strong> {userId}
-        </p>
-        <p>
-          <strong>Session ID:</strong> {sessionId}
-        </p>
-        <p>
-          <strong>Email:</strong>{' '}
-          {user?.primaryEmailAddress?.emailAddress}
-        </p>
-        <p>
-          <strong>Name:</strong> {user?.firstName} {user?.lastName}
-        </p>
+			<div className="mt-4 space-y-2">
+				<p>
+					<strong>User ID:</strong> {userId}
+				</p>
+				<p>
+					<strong>Session ID:</strong> {sessionId}
+				</p>
+				<p>
+					<strong>Email:</strong> {user?.primaryEmailAddress?.emailAddress}
+				</p>
+				<p>
+					<strong>Name:</strong> {user?.firstName} {user?.lastName}
+				</p>
 
-        {/* Access public metadata */}
-        {user?.publicMetadata && (
-          <div>
-            <strong>Role:</strong>{' '}
-            {(user.publicMetadata as any).role || 'user'}
-          </div>
-        )}
-      </div>
-    </div>
-  )
+				{/* Access public metadata */}
+				{user?.publicMetadata && (
+					<div>
+						<strong>Role:</strong> {(user.publicMetadata as any).role || "user"}
+					</div>
+				)}
+			</div>
+		</div>
+	);
 }
 
 /**

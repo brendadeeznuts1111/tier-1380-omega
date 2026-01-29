@@ -15,72 +15,72 @@ import { useState } from "react";
  */
 
 interface Item {
-  id: number;
-  text: string;
+	id: number;
+	text: string;
 }
 
 export function BasicListExample() {
-  // 1. Get the ref from useAutoAnimate hook
-  const [parent] = useAutoAnimate();
+	// 1. Get the ref from useAutoAnimate hook
+	const [parent] = useAutoAnimate();
 
-  // 2. Set up state
-  const [items, setItems] = useState<Item[]>([
-    { id: 1, text: "Item 1" },
-    { id: 2, text: "Item 2" },
-    { id: 3, text: "Item 3" },
-  ]);
+	// 2. Set up state
+	const [items, setItems] = useState<Item[]>([
+		{ id: 1, text: "Item 1" },
+		{ id: 2, text: "Item 2" },
+		{ id: 3, text: "Item 3" },
+	]);
 
-  // 3. Functions to modify the list
-  const addItem = () => {
-    const newId = Math.max(...items.map(item => item.id), 0) + 1;
-    setItems([...items, { id: newId, text: `Item ${newId}` }]);
-  };
+	// 3. Functions to modify the list
+	const addItem = () => {
+		const newId = Math.max(...items.map((item) => item.id), 0) + 1;
+		setItems([...items, { id: newId, text: `Item ${newId}` }]);
+	};
 
-  const removeItem = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
-  };
+	const removeItem = (id: number) => {
+		setItems(items.filter((item) => item.id !== id));
+	};
 
-  const shuffleItems = () => {
-    setItems([...items].sort(() => Math.random() - 0.5));
-  };
+	const shuffleItems = () => {
+		setItems([...items].sort(() => Math.random() - 0.5));
+	};
 
-  return (
-    <div className="space-y-4 p-6">
-      {/* Controls */}
-      <div className="flex gap-2">
-        <button
-          onClick={addItem}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Add Item
-        </button>
-        <button
-          onClick={shuffleItems}
-          className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-        >
-          Shuffle
-        </button>
-      </div>
+	return (
+		<div className="space-y-4 p-6">
+			{/* Controls */}
+			<div className="flex gap-2">
+				<button
+					onClick={addItem}
+					className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+				>
+					Add Item
+				</button>
+				<button
+					onClick={shuffleItems}
+					className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+				>
+					Shuffle
+				</button>
+			</div>
 
-      {/* 4. Attach ref to parent element - that's it! */}
-      <ul ref={parent} className="space-y-2">
-        {items.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center justify-between p-4 bg-white border rounded shadow-sm"
-          >
-            <span>{item.text}</span>
-            <button
-              onClick={() => removeItem(item.id)}
-              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+			{/* 4. Attach ref to parent element - that's it! */}
+			<ul ref={parent} className="space-y-2">
+				{items.map((item) => (
+					<li
+						key={item.id}
+						className="flex items-center justify-between p-4 bg-white border rounded shadow-sm"
+					>
+						<span>{item.text}</span>
+						<button
+							onClick={() => removeItem(item.id)}
+							className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+						>
+							Remove
+						</button>
+					</li>
+				))}
+			</ul>
+		</div>
+	);
 }
 
 /**

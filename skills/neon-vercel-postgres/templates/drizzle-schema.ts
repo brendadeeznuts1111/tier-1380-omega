@@ -8,93 +8,121 @@
  *   4. Apply migrations: npx drizzle-kit migrate
  */
 
-import { pgTable, serial, text, timestamp, integer, boolean, jsonb, index, unique } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations } from "drizzle-orm";
+import {
+	boolean,
+	index,
+	integer,
+	jsonb,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+	unique,
+} from "drizzle-orm/pg-core";
 
 // ============================================================================
 // USERS TABLE
 // ============================================================================
 
-export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  name: text('name').notNull(),
-  avatar: text('avatar'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-  // Indexes for common queries
-  emailIdx: index('users_email_idx').on(table.email),
-}));
+export const users = pgTable(
+	"users",
+	{
+		id: serial("id").primaryKey(),
+		email: text("email").notNull().unique(),
+		name: text("name").notNull(),
+		avatar: text("avatar"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => ({
+		// Indexes for common queries
+		emailIdx: index("users_email_idx").on(table.email),
+	}),
+);
 
 // ============================================================================
 // POSTS TABLE
 // ============================================================================
 
-export const posts = pgTable('posts', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  content: text('content'),
-  published: boolean('published').default(false).notNull(),
-  slug: text('slug').notNull().unique(),
-  metadata: jsonb('metadata').$type<{
-    views?: number;
-    likes?: number;
-    tags?: string[];
-  }>(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-  // Indexes for common queries
-  userIdIdx: index('posts_user_id_idx').on(table.userId),
-  slugIdx: index('posts_slug_idx').on(table.slug),
-  publishedIdx: index('posts_published_idx').on(table.published),
-}));
+export const posts = pgTable(
+	"posts",
+	{
+		id: serial("id").primaryKey(),
+		userId: integer("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		title: text("title").notNull(),
+		content: text("content"),
+		published: boolean("published").default(false).notNull(),
+		slug: text("slug").notNull().unique(),
+		metadata: jsonb("metadata").$type<{
+			views?: number;
+			likes?: number;
+			tags?: string[];
+		}>(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => ({
+		// Indexes for common queries
+		userIdIdx: index("posts_user_id_idx").on(table.userId),
+		slugIdx: index("posts_slug_idx").on(table.slug),
+		publishedIdx: index("posts_published_idx").on(table.published),
+	}),
+);
 
 // ============================================================================
 // COMMENTS TABLE
 // ============================================================================
 
-export const comments = pgTable('comments', {
-  id: serial('id').primaryKey(),
-  postId: integer('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
-  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-  // Indexes for common queries
-  postIdIdx: index('comments_post_id_idx').on(table.postId),
-  userIdIdx: index('comments_user_id_idx').on(table.userId),
-}));
+export const comments = pgTable(
+	"comments",
+	{
+		id: serial("id").primaryKey(),
+		postId: integer("post_id")
+			.notNull()
+			.references(() => posts.id, { onDelete: "cascade" }),
+		userId: integer("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		content: text("content").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => ({
+		// Indexes for common queries
+		postIdIdx: index("comments_post_id_idx").on(table.postId),
+		userIdIdx: index("comments_user_id_idx").on(table.userId),
+	}),
+);
 
 // ============================================================================
 // RELATIONS (for Drizzle query API)
 // ============================================================================
 
 export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-  comments: many(comments),
+	posts: many(posts),
+	comments: many(comments),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
-  author: one(users, {
-    fields: [posts.userId],
-    references: [users.id],
-  }),
-  comments: many(comments),
+	author: one(users, {
+		fields: [posts.userId],
+		references: [users.id],
+	}),
+	comments: many(comments),
 }));
 
 export const commentsRelations = relations(comments, ({ one }) => ({
-  post: one(posts, {
-    fields: [comments.postId],
-    references: [posts.id],
-  }),
-  author: one(users, {
-    fields: [comments.userId],
-    references: [users.id],
-  }),
+	post: one(posts, {
+		fields: [comments.postId],
+		references: [posts.id],
+	}),
+	author: one(users, {
+		fields: [comments.userId],
+		references: [users.id],
+	}),
 }));
 
 // ============================================================================

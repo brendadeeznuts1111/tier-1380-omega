@@ -9,133 +9,136 @@
  * - CLS prevention with explicit dimensions
  */
 
-import { type ImgHTMLAttributes } from 'react';
+import type { ImgHTMLAttributes } from "react";
 
 interface ImageSource {
-  /** Image URL or path */
-  src: string;
-  /** Width of this image variant (e.g., 400, 800, 1200) */
-  width: number;
+	/** Image URL or path */
+	src: string;
+	/** Width of this image variant (e.g., 400, 800, 1200) */
+	width: number;
 }
 
-interface ResponsiveImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet'> {
-  /** Base image source (JPEG/PNG fallback) */
-  src: string;
-  /** Array of responsive image sources with widths */
-  sources: ImageSource[];
-  /** WebP versions of sources (optional but recommended) */
-  webpSources?: ImageSource[];
-  /** AVIF versions of sources (optional but recommended) */
-  avifSources?: ImageSource[];
-  /** Sizes attribute for responsive images */
-  sizes: string;
-  /** Alt text (required for accessibility) */
-  alt: string;
-  /** Image width (for aspect ratio calculation) */
-  width: number;
-  /** Image height (for aspect ratio calculation) */
-  height: number;
-  /** Enable lazy loading (default: true for non-LCP images) */
-  lazy?: boolean;
-  /** High priority for LCP images (default: false) */
-  priority?: boolean;
-  /** Wrap in aspect ratio container (default: false) */
-  aspectRatioContainer?: boolean;
-  /** Aspect ratio for container (e.g., "16/9", "4/3", "1/1") */
-  aspectRatio?: string;
-  /** object-fit value when using aspect ratio container */
-  objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
-  /** Additional CSS classes */
-  className?: string;
+interface ResponsiveImageProps
+	extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet"> {
+	/** Base image source (JPEG/PNG fallback) */
+	src: string;
+	/** Array of responsive image sources with widths */
+	sources: ImageSource[];
+	/** WebP versions of sources (optional but recommended) */
+	webpSources?: ImageSource[];
+	/** AVIF versions of sources (optional but recommended) */
+	avifSources?: ImageSource[];
+	/** Sizes attribute for responsive images */
+	sizes: string;
+	/** Alt text (required for accessibility) */
+	alt: string;
+	/** Image width (for aspect ratio calculation) */
+	width: number;
+	/** Image height (for aspect ratio calculation) */
+	height: number;
+	/** Enable lazy loading (default: true for non-LCP images) */
+	lazy?: boolean;
+	/** High priority for LCP images (default: false) */
+	priority?: boolean;
+	/** Wrap in aspect ratio container (default: false) */
+	aspectRatioContainer?: boolean;
+	/** Aspect ratio for container (e.g., "16/9", "4/3", "1/1") */
+	aspectRatio?: string;
+	/** object-fit value when using aspect ratio container */
+	objectFit?: "cover" | "contain" | "fill" | "scale-down" | "none";
+	/** Additional CSS classes */
+	className?: string;
 }
 
 /**
  * Build srcset string from ImageSource array
  */
 function buildSrcSet(sources: ImageSource[]): string {
-  return sources.map(({ src, width }) => `${src} ${width}w`).join(', ');
+	return sources.map(({ src, width }) => `${src} ${width}w`).join(", ");
 }
 
 /**
  * ResponsiveImage component with modern formats and lazy loading
  */
 export function ResponsiveImage({
-  src,
-  sources,
-  webpSources,
-  avifSources,
-  sizes,
-  alt,
-  width,
-  height,
-  lazy = true,
-  priority = false,
-  aspectRatioContainer = false,
-  aspectRatio,
-  objectFit = 'cover',
-  className = '',
-  ...props
+	src,
+	sources,
+	webpSources,
+	avifSources,
+	sizes,
+	alt,
+	width,
+	height,
+	lazy = true,
+	priority = false,
+	aspectRatioContainer = false,
+	aspectRatio,
+	objectFit = "cover",
+	className = "",
+	...props
 }: ResponsiveImageProps) {
-  const loading = priority ? 'eager' : lazy ? 'lazy' : 'eager';
-  const fetchPriority = priority ? 'high' : undefined;
+	const loading = priority ? "eager" : lazy ? "lazy" : "eager";
+	const fetchPriority = priority ? "high" : undefined;
 
-  const srcSet = buildSrcSet(sources);
-  const webpSrcSet = webpSources ? buildSrcSet(webpSources) : undefined;
-  const avifSrcSet = avifSources ? buildSrcSet(avifSources) : undefined;
+	const srcSet = buildSrcSet(sources);
+	const webpSrcSet = webpSources ? buildSrcSet(webpSources) : undefined;
+	const avifSrcSet = avifSources ? buildSrcSet(avifSources) : undefined;
 
-  const imgElement = (
-    <img
-      src={src}
-      srcSet={srcSet}
-      sizes={sizes}
-      alt={alt}
-      width={width}
-      height={height}
-      loading={loading}
-      fetchpriority={fetchPriority}
-      className={aspectRatioContainer ? `w-full h-full object-${objectFit} ${className}` : className}
-      {...props}
-    />
-  );
+	const imgElement = (
+		<img
+			src={src}
+			srcSet={srcSet}
+			sizes={sizes}
+			alt={alt}
+			width={width}
+			height={height}
+			loading={loading}
+			fetchpriority={fetchPriority}
+			className={
+				aspectRatioContainer
+					? `w-full h-full object-${objectFit} ${className}`
+					: className
+			}
+			{...props}
+		/>
+	);
 
-  // If modern formats are provided, use picture element
-  if (webpSrcSet || avifSrcSet) {
-    const pictureContent = (
-      <picture>
-        {avifSrcSet && (
-          <source srcSet={avifSrcSet} sizes={sizes} type="image/avif" />
-        )}
-        {webpSrcSet && (
-          <source srcSet={webpSrcSet} sizes={sizes} type="image/webp" />
-        )}
-        {imgElement}
-      </picture>
-    );
+	// If modern formats are provided, use picture element
+	if (webpSrcSet || avifSrcSet) {
+		const pictureContent = (
+			<picture>
+				{avifSrcSet && (
+					<source srcSet={avifSrcSet} sizes={sizes} type="image/avif" />
+				)}
+				{webpSrcSet && (
+					<source srcSet={webpSrcSet} sizes={sizes} type="image/webp" />
+				)}
+				{imgElement}
+			</picture>
+		);
 
-    // Wrap in aspect ratio container if requested
-    if (aspectRatioContainer) {
-      const ratio = aspectRatio || `${width}/${height}`;
-      return (
-        <div className={`aspect-[${ratio}] overflow-hidden`}>
-          {pictureContent}
-        </div>
-      );
-    }
+		// Wrap in aspect ratio container if requested
+		if (aspectRatioContainer) {
+			const ratio = aspectRatio || `${width}/${height}`;
+			return (
+				<div className={`aspect-[${ratio}] overflow-hidden`}>
+					{pictureContent}
+				</div>
+			);
+		}
 
-    return pictureContent;
-  }
+		return pictureContent;
+	}
 
-  // No modern formats - just img element
-  if (aspectRatioContainer) {
-    const ratio = aspectRatio || `${width}/${height}`;
-    return (
-      <div className={`aspect-[${ratio}] overflow-hidden`}>
-        {imgElement}
-      </div>
-    );
-  }
+	// No modern formats - just img element
+	if (aspectRatioContainer) {
+		const ratio = aspectRatio || `${width}/${height}`;
+		return (
+			<div className={`aspect-[${ratio}] overflow-hidden`}>{imgElement}</div>
+		);
+	}
 
-  return imgElement;
+	return imgElement;
 }
 
 /**

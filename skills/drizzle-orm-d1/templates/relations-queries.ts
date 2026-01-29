@@ -6,9 +6,16 @@
  * 2. Manual JOINs
  */
 
-import { drizzle } from 'drizzle-orm/d1';
-import { users, posts, comments, usersRelations, postsRelations, commentsRelations } from './schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { desc, eq, sql } from "drizzle-orm";
+import type { drizzle } from "drizzle-orm/d1";
+import {
+	comments,
+	commentsRelations,
+	posts,
+	postsRelations,
+	users,
+	usersRelations,
+} from "./schema";
 
 /**
  * IMPORTANT: To use relational queries (db.query), you must pass the schema to drizzle()
@@ -25,102 +32,120 @@ import { eq, desc, sql } from 'drizzle-orm';
  */
 
 // Get user with all their posts
-export async function getUserWithPosts(db: ReturnType<typeof drizzle>, userId: number) {
-  return await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: {
-      posts: true,
-    },
-  });
+export async function getUserWithPosts(
+	db: ReturnType<typeof drizzle>,
+	userId: number,
+) {
+	return await db.query.users.findFirst({
+		where: eq(users.id, userId),
+		with: {
+			posts: true,
+		},
+	});
 }
 
 // Get user with posts and comments
-export async function getUserWithPostsAndComments(db: ReturnType<typeof drizzle>, userId: number) {
-  return await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: {
-      posts: true,
-      comments: true,
-    },
-  });
+export async function getUserWithPostsAndComments(
+	db: ReturnType<typeof drizzle>,
+	userId: number,
+) {
+	return await db.query.users.findFirst({
+		where: eq(users.id, userId),
+		with: {
+			posts: true,
+			comments: true,
+		},
+	});
 }
 
 // Get post with author
-export async function getPostWithAuthor(db: ReturnType<typeof drizzle>, postId: number) {
-  return await db.query.posts.findFirst({
-    where: eq(posts.id, postId),
-    with: {
-      author: true,
-    },
-  });
+export async function getPostWithAuthor(
+	db: ReturnType<typeof drizzle>,
+	postId: number,
+) {
+	return await db.query.posts.findFirst({
+		where: eq(posts.id, postId),
+		with: {
+			author: true,
+		},
+	});
 }
 
 // Get post with author and comments
-export async function getPostWithAuthorAndComments(db: ReturnType<typeof drizzle>, postId: number) {
-  return await db.query.posts.findFirst({
-    where: eq(posts.id, postId),
-    with: {
-      author: true,
-      comments: {
-        with: {
-          author: true, // Nested: get comment author too
-        },
-      },
-    },
-  });
+export async function getPostWithAuthorAndComments(
+	db: ReturnType<typeof drizzle>,
+	postId: number,
+) {
+	return await db.query.posts.findFirst({
+		where: eq(posts.id, postId),
+		with: {
+			author: true,
+			comments: {
+				with: {
+					author: true, // Nested: get comment author too
+				},
+			},
+		},
+	});
 }
 
 // Get all published posts with authors
-export async function getPublishedPostsWithAuthors(db: ReturnType<typeof drizzle>, limit = 10) {
-  return await db.query.posts.findMany({
-    where: eq(posts.published, true),
-    with: {
-      author: {
-        columns: {
-          id: true,
-          name: true,
-          email: true,
-          // Exclude bio and timestamps
-        },
-      },
-    },
-    orderBy: [desc(posts.createdAt)],
-    limit,
-  });
+export async function getPublishedPostsWithAuthors(
+	db: ReturnType<typeof drizzle>,
+	limit = 10,
+) {
+	return await db.query.posts.findMany({
+		where: eq(posts.published, true),
+		with: {
+			author: {
+				columns: {
+					id: true,
+					name: true,
+					email: true,
+					// Exclude bio and timestamps
+				},
+			},
+		},
+		orderBy: [desc(posts.createdAt)],
+		limit,
+	});
 }
 
 // Get user with filtered posts (only published)
-export async function getUserWithPublishedPosts(db: ReturnType<typeof drizzle>, userId: number) {
-  return await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: {
-      posts: {
-        where: eq(posts.published, true),
-        orderBy: [desc(posts.createdAt)],
-      },
-    },
-  });
+export async function getUserWithPublishedPosts(
+	db: ReturnType<typeof drizzle>,
+	userId: number,
+) {
+	return await db.query.users.findFirst({
+		where: eq(users.id, userId),
+		with: {
+			posts: {
+				where: eq(posts.published, true),
+				orderBy: [desc(posts.createdAt)],
+			},
+		},
+	});
 }
 
 // Get post with recent comments
 export async function getPostWithRecentComments(
-  db: ReturnType<typeof drizzle>,
-  postId: number,
-  commentLimit = 10
+	db: ReturnType<typeof drizzle>,
+	postId: number,
+	commentLimit = 10,
 ) {
-  return await db.query.posts.findFirst({
-    where: eq(posts.id, postId),
-    with: {
-      author: true,
-      comments: {
-        with: {
-          author: true,
-        },
-        orderBy: [desc(comments.createdAt)],
-        limit: commentLimit,
-      },
-    },
-  });
+	return await db.query.posts.findFirst({
+		where: eq(posts.id, postId),
+		with: {
+			author: true,
+			comments: {
+				with: {
+					author: true,
+				},
+				orderBy: [desc(comments.createdAt)],
+				limit: commentLimit,
+			},
+		},
+	});
 }
 
 /**
@@ -131,64 +156,66 @@ export async function getPostWithRecentComments(
 
 // Left join: Get all users with their post counts
 export async function getUsersWithPostCounts(db: ReturnType<typeof drizzle>) {
-  return await db
-    .select({
-      user: users,
-      postCount: sql<number>`count(${posts.id})`,
-    })
-    .from(users)
-    .leftJoin(posts, eq(posts.authorId, users.id))
-    .groupBy(users.id)
-    .all();
+	return await db
+		.select({
+			user: users,
+			postCount: sql<number>`count(${posts.id})`,
+		})
+		.from(users)
+		.leftJoin(posts, eq(posts.authorId, users.id))
+		.groupBy(users.id)
+		.all();
 }
 
 // Inner join: Get users who have posts
 export async function getUsersWithPosts(db: ReturnType<typeof drizzle>) {
-  return await db
-    .select({
-      user: users,
-      post: posts,
-    })
-    .from(users)
-    .innerJoin(posts, eq(posts.authorId, users.id))
-    .all();
+	return await db
+		.select({
+			user: users,
+			post: posts,
+		})
+		.from(users)
+		.innerJoin(posts, eq(posts.authorId, users.id))
+		.all();
 }
 
 // Multiple joins: Get comments with post and author info
 export async function getCommentsWithDetails(db: ReturnType<typeof drizzle>) {
-  return await db
-    .select({
-      comment: comments,
-      post: {
-        id: posts.id,
-        title: posts.title,
-        slug: posts.slug,
-      },
-      author: {
-        id: users.id,
-        name: users.name,
-        email: users.email,
-      },
-    })
-    .from(comments)
-    .innerJoin(posts, eq(comments.postId, posts.id))
-    .innerJoin(users, eq(comments.authorId, users.id))
-    .all();
+	return await db
+		.select({
+			comment: comments,
+			post: {
+				id: posts.id,
+				title: posts.title,
+				slug: posts.slug,
+			},
+			author: {
+				id: users.id,
+				name: users.name,
+				email: users.email,
+			},
+		})
+		.from(comments)
+		.innerJoin(posts, eq(comments.postId, posts.id))
+		.innerJoin(users, eq(comments.authorId, users.id))
+		.all();
 }
 
 // Complex join with aggregation
-export async function getPostsWithCommentCounts(db: ReturnType<typeof drizzle>) {
-  return await db
-    .select({
-      post: posts,
-      author: users,
-      commentCount: sql<number>`count(${comments.id})`,
-    })
-    .from(posts)
-    .innerJoin(users, eq(posts.authorId, users.id))
-    .leftJoin(comments, eq(comments.postId, posts.id))
-    .groupBy(posts.id, users.id)
-    .all();
+export async function getPostsWithCommentCounts(
+	db: ReturnType<typeof drizzle>,
+) {
+	return await db
+		.select({
+			post: posts,
+			author: users,
+			commentCount: sql<number>`count(${comments.id})`,
+		})
+		.from(posts)
+		.innerJoin(users, eq(posts.authorId, users.id))
+		.leftJoin(comments, eq(comments.postId, posts.id))
+		.groupBy(posts.id, users.id)
+		.all();
 }
 
 /**
@@ -197,24 +224,24 @@ export async function getPostsWithCommentCounts(db: ReturnType<typeof drizzle>) 
 
 // Get users with more than 5 posts
 export async function getActiveAuthors(db: ReturnType<typeof drizzle>) {
-  const postCounts = db
-    .select({
-      authorId: posts.authorId,
-      count: sql<number>`count(*)`.as('count'),
-    })
-    .from(posts)
-    .groupBy(posts.authorId)
-    .as('post_counts');
+	const postCounts = db
+		.select({
+			authorId: posts.authorId,
+			count: sql<number>`count(*)`.as("count"),
+		})
+		.from(posts)
+		.groupBy(posts.authorId)
+		.as("post_counts");
 
-  return await db
-    .select({
-      user: users,
-      postCount: postCounts.count,
-    })
-    .from(users)
-    .innerJoin(postCounts, eq(users.id, postCounts.authorId))
-    .where(sql`${postCounts.count} > 5`)
-    .all();
+	return await db
+		.select({
+			user: users,
+			postCount: postCounts.count,
+		})
+		.from(users)
+		.innerJoin(postCounts, eq(users.id, postCounts.authorId))
+		.where(sql`${postCounts.count} > 5`)
+		.all();
 }
 
 /**
@@ -222,19 +249,22 @@ export async function getActiveAuthors(db: ReturnType<typeof drizzle>) {
  */
 
 // Get post statistics
-export async function getPostStatistics(db: ReturnType<typeof drizzle>, postId: number) {
-  const [stats] = await db
-    .select({
-      post: posts,
-      commentCount: sql<number>`count(DISTINCT ${comments.id})`,
-    })
-    .from(posts)
-    .leftJoin(comments, eq(comments.postId, posts.id))
-    .where(eq(posts.id, postId))
-    .groupBy(posts.id)
-    .all();
+export async function getPostStatistics(
+	db: ReturnType<typeof drizzle>,
+	postId: number,
+) {
+	const [stats] = await db
+		.select({
+			post: posts,
+			commentCount: sql<number>`count(DISTINCT ${comments.id})`,
+		})
+		.from(posts)
+		.leftJoin(comments, eq(comments.postId, posts.id))
+		.where(eq(posts.id, postId))
+		.groupBy(posts.id)
+		.all();
 
-  return stats;
+	return stats;
 }
 
 /**

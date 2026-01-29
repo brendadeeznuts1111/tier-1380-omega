@@ -15,90 +15,85 @@
  * Learn more: See SKILL.md for combining with other middleware
  */
 
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 interface Todo {
-  id: string
-  text: string
-  done: boolean
+	id: string;
+	text: string;
+	done: boolean;
 }
 
 interface DevtoolsStore {
-  // State
-  todos: Todo[]
-  filter: 'all' | 'active' | 'completed'
+	// State
+	todos: Todo[];
+	filter: "all" | "active" | "completed";
 
-  // Actions
-  addTodo: (text: string) => void
-  toggleTodo: (id: string) => void
-  deleteTodo: (id: string) => void
-  setFilter: (filter: DevtoolsStore['filter']) => void
-  clearCompleted: () => void
+	// Actions
+	addTodo: (text: string) => void;
+	toggleTodo: (id: string) => void;
+	deleteTodo: (id: string) => void;
+	setFilter: (filter: DevtoolsStore["filter"]) => void;
+	clearCompleted: () => void;
 }
 
 export const useDevtoolsStore = create<DevtoolsStore>()(
-  devtools(
-    (set) => ({
-      // Initial state
-      todos: [],
-      filter: 'all',
+	devtools(
+		(set) => ({
+			// Initial state
+			todos: [],
+			filter: "all",
 
-      // Actions with named actions for DevTools
-      addTodo: (text) =>
-        set(
-          (state) => ({
-            todos: [
-              ...state.todos,
-              { id: Date.now().toString(), text, done: false },
-            ],
-          }),
-          undefined,
-          'todos/add', // Action name in DevTools
-        ),
+			// Actions with named actions for DevTools
+			addTodo: (text) =>
+				set(
+					(state) => ({
+						todos: [
+							...state.todos,
+							{ id: Date.now().toString(), text, done: false },
+						],
+					}),
+					undefined,
+					"todos/add", // Action name in DevTools
+				),
 
-      toggleTodo: (id) =>
-        set(
-          (state) => ({
-            todos: state.todos.map((todo) =>
-              todo.id === id ? { ...todo, done: !todo.done } : todo
-            ),
-          }),
-          undefined,
-          'todos/toggle',
-        ),
+			toggleTodo: (id) =>
+				set(
+					(state) => ({
+						todos: state.todos.map((todo) =>
+							todo.id === id ? { ...todo, done: !todo.done } : todo,
+						),
+					}),
+					undefined,
+					"todos/toggle",
+				),
 
-      deleteTodo: (id) =>
-        set(
-          (state) => ({
-            todos: state.todos.filter((todo) => todo.id !== id),
-          }),
-          undefined,
-          'todos/delete',
-        ),
+			deleteTodo: (id) =>
+				set(
+					(state) => ({
+						todos: state.todos.filter((todo) => todo.id !== id),
+					}),
+					undefined,
+					"todos/delete",
+				),
 
-      setFilter: (filter) =>
-        set(
-          { filter },
-          undefined,
-          'filter/set',
-        ),
+			setFilter: (filter) => set({ filter }, undefined, "filter/set"),
 
-      clearCompleted: () =>
-        set(
-          (state) => ({
-            todos: state.todos.filter((todo) => !todo.done),
-          }),
-          undefined,
-          'todos/clearCompleted',
-        ),
-    }),
-    {
-      name: 'TodoStore', // Store name in DevTools
-      enabled: process.env.NODE_ENV === 'development', // Optional: only in dev
-    },
-  ),
-)
+			clearCompleted: () =>
+				set(
+					(state) => ({
+						todos: state.todos.filter((todo) => !todo.done),
+					}),
+					undefined,
+					"todos/clearCompleted",
+				),
+		}),
+		{
+			name: "TodoStore", // Store name in DevTools
+			enabled: process.env.NODE_ENV === "development", // Optional: only in dev
+		},
+	),
+);
 
 /**
  * Usage in component:

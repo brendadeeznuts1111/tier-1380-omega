@@ -1,71 +1,69 @@
 // Complete wrangler.jsonc configuration for Browser Rendering
 {
-  "name": "browser-worker",
-  "main": "src/index.ts",
-  "compatibility_date": "2023-03-14",
+	"name": "browser-worker",
+	"main": "src/index.ts",
+	"compatibility_date": "2023-03-14",
 
-  // REQUIRED: nodejs_compat flag for Browser Rendering
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+	// REQUIRED: nodejs_compat flag for Browser Rendering
+	"compatibility_flags": ["nodejs_compat"],
 
-  // Browser binding (required)
-  "browser": {
-    "binding": "MYBROWSER"
-    // Optional: Use real headless browser during local development
-    // "remote": true
-  },
+	// Browser binding (required)
+	"browser": {
+		"binding": "MYBROWSER"
+		// Optional: Use real headless browser during local development
+		// "remote": true
+	},
 
-  // Optional: KV for caching screenshots/PDFs
-  // Create with: npx wrangler kv namespace create SCREENSHOT_CACHE
-  //              npx wrangler kv namespace create SCREENSHOT_CACHE --preview
-  "kv_namespaces": [
-    {
-      "binding": "SCREENSHOT_CACHE",
-      "id": "YOUR_KV_ID",           // Replace with actual ID
-      "preview_id": "YOUR_PREVIEW_ID"  // Replace with actual preview ID
-    }
-  ],
+	// Optional: KV for caching screenshots/PDFs
+	// Create with: npx wrangler kv namespace create SCREENSHOT_CACHE
+	//              npx wrangler kv namespace create SCREENSHOT_CACHE --preview
+	"kv_namespaces": [
+		{
+			"binding": "SCREENSHOT_CACHE",
+			"id": "YOUR_KV_ID", // Replace with actual ID
+			"preview_id": "YOUR_PREVIEW_ID" // Replace with actual preview ID
+		}
+	],
 
-  // Optional: R2 for storing generated files
-  // Create with: npx wrangler r2 bucket create browser-files
-  "r2_buckets": [
-    {
-      "binding": "BROWSER_FILES",
-      "bucket_name": "browser-files"
-    }
-  ],
+	// Optional: R2 for storing generated files
+	// Create with: npx wrangler r2 bucket create browser-files
+	"r2_buckets": [
+		{
+			"binding": "BROWSER_FILES",
+			"bucket_name": "browser-files"
+		}
+	],
 
-  // Optional: AI binding for AI-enhanced scraping
-  "ai": {
-    "binding": "AI"
-  },
+	// Optional: AI binding for AI-enhanced scraping
+	"ai": {
+		"binding": "AI"
+	},
 
-  // Optional: D1 for storing scraping results
-  // Create with: npx wrangler d1 create browser-db
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "browser-db",
-      "database_id": "YOUR_DB_ID"
-    }
-  ],
+	// Optional: D1 for storing scraping results
+	// Create with: npx wrangler d1 create browser-db
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "browser-db",
+			"database_id": "YOUR_DB_ID"
+		}
+	],
 
-  // Optional: Environment variables
-  "vars": {
-    "ENVIRONMENT": "production"
-  },
+	// Optional: Environment variables
+	"vars": {
+		"ENVIRONMENT": "production"
+	}
 
-  // Optional: Secrets (set with: npx wrangler secret put SECRET_NAME)
-  // "secrets": ["API_KEY"]
+	// Optional: Secrets (set with: npx wrangler secret put SECRET_NAME)
+	// "secrets": ["API_KEY"]
 
-  // Optional: Custom routes for production
-  // "routes": [
-  //   {
-  //     "pattern": "browser.example.com/*",
-  //     "zone_name": "example.com"
-  //   }
-  // ]
+	// Optional: Custom routes for production
+	// "routes": [
+	//   {
+	//     "pattern": "browser.example.com/*",
+	//     "zone_name": "example.com"
+	//   }
+	// ]
 }
 
 /**

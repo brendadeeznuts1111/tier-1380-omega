@@ -4,55 +4,55 @@
 import { chromium } from "@cloudflare/playwright";
 
 interface Env {
-  BROWSER: Fetcher;
+	BROWSER: Fetcher;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get("url") || "https://example.com";
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const { searchParams } = new URL(request.url);
+		const url = searchParams.get("url") || "https://example.com";
 
-    // Launch browser (note: chromium.launch instead of puppeteer.launch)
-    const browser = await chromium.launch(env.BROWSER);
+		// Launch browser (note: chromium.launch instead of puppeteer.launch)
+		const browser = await chromium.launch(env.BROWSER);
 
-    try {
-      // Create new page
-      const page = await browser.newPage();
+		try {
+			// Create new page
+			const page = await browser.newPage();
 
-      // Navigate to URL
-      await page.goto(url, {
-        waitUntil: "networkidle",
-        timeout: 30000,
-      });
+			// Navigate to URL
+			await page.goto(url, {
+				waitUntil: "networkidle",
+				timeout: 30000,
+			});
 
-      // Take screenshot
-      const screenshot = await page.screenshot({
-        fullPage: true,
-        type: "png",
-      });
+			// Take screenshot
+			const screenshot = await page.screenshot({
+				fullPage: true,
+				type: "png",
+			});
 
-      // Clean up
-      await browser.close();
+			// Clean up
+			await browser.close();
 
-      return new Response(screenshot, {
-        headers: {
-          "content-type": "image/png",
-          "cache-control": "public, max-age=3600",
-        },
-      });
-    } catch (error) {
-      await browser.close();
-      return new Response(
-        JSON.stringify({
-          error: error instanceof Error ? error.message : "Screenshot failed",
-        }),
-        {
-          status: 500,
-          headers: { "content-type": "application/json" },
-        }
-      );
-    }
-  },
+			return new Response(screenshot, {
+				headers: {
+					"content-type": "image/png",
+					"cache-control": "public, max-age=3600",
+				},
+			});
+		} catch (error) {
+			await browser.close();
+			return new Response(
+				JSON.stringify({
+					error: error instanceof Error ? error.message : "Screenshot failed",
+				}),
+				{
+					status: 500,
+					headers: { "content-type": "application/json" },
+				},
+			);
+		}
+	},
 };
 
 /**

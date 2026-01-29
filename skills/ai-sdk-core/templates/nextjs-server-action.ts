@@ -1,84 +1,84 @@
 // Next.js Server Action with AI SDK
 // AI SDK Core - Server Actions for Next.js App Router
 
-'use server';
+"use server";
 
-import { generateObject, generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { z } from 'zod';
+import { openai } from "@ai-sdk/openai";
+import { generateObject, generateText } from "ai";
+import { z } from "zod";
 
 // Example 1: Simple text generation
 export async function generateStory(theme: string) {
-  const result = await generateText({
-    model: openai('gpt-4-turbo'),
-    prompt: `Write a short story about: ${theme}`,
-    maxOutputTokens: 500,
-  });
+	const result = await generateText({
+		model: openai("gpt-4-turbo"),
+		prompt: `Write a short story about: ${theme}`,
+		maxOutputTokens: 500,
+	});
 
-  return result.text;
+	return result.text;
 }
 
 // Example 2: Structured output (recipe generation)
 export async function generateRecipe(ingredients: string[]) {
-  const RecipeSchema = z.object({
-    name: z.string(),
-    description: z.string(),
-    ingredients: z.array(
-      z.object({
-        name: z.string(),
-        amount: z.string(),
-      })
-    ),
-    instructions: z.array(z.string()),
-    cookingTime: z.number().describe('Cooking time in minutes'),
-    servings: z.number(),
-  });
+	const RecipeSchema = z.object({
+		name: z.string(),
+		description: z.string(),
+		ingredients: z.array(
+			z.object({
+				name: z.string(),
+				amount: z.string(),
+			}),
+		),
+		instructions: z.array(z.string()),
+		cookingTime: z.number().describe("Cooking time in minutes"),
+		servings: z.number(),
+	});
 
-  const result = await generateObject({
-    model: openai('gpt-4'),
-    schema: RecipeSchema,
-    prompt: `Create a recipe using these ingredients: ${ingredients.join(', ')}`,
-  });
+	const result = await generateObject({
+		model: openai("gpt-4"),
+		schema: RecipeSchema,
+		prompt: `Create a recipe using these ingredients: ${ingredients.join(", ")}`,
+	});
 
-  return result.object;
+	return result.object;
 }
 
 // Example 3: Data extraction
 export async function extractContactInfo(text: string) {
-  const ContactSchema = z.object({
-    name: z.string().optional(),
-    email: z.string().email().optional(),
-    phone: z.string().optional(),
-    company: z.string().optional(),
-  });
+	const ContactSchema = z.object({
+		name: z.string().optional(),
+		email: z.string().email().optional(),
+		phone: z.string().optional(),
+		company: z.string().optional(),
+	});
 
-  const result = await generateObject({
-    model: openai('gpt-4'),
-    schema: ContactSchema,
-    prompt: `Extract contact information from this text: ${text}`,
-  });
+	const result = await generateObject({
+		model: openai("gpt-4"),
+		schema: ContactSchema,
+		prompt: `Extract contact information from this text: ${text}`,
+	});
 
-  return result.object;
+	return result.object;
 }
 
 // Example 4: Error handling in Server Action
 export async function generateWithErrorHandling(prompt: string) {
-  try {
-    const result = await generateText({
-      model: openai('gpt-4-turbo'),
-      prompt,
-      maxOutputTokens: 200,
-    });
+	try {
+		const result = await generateText({
+			model: openai("gpt-4-turbo"),
+			prompt,
+			maxOutputTokens: 200,
+		});
 
-    return { success: true, data: result.text };
-  } catch (error: any) {
-    console.error('AI generation error:', error);
+		return { success: true, data: result.text };
+	} catch (error: any) {
+		console.error("AI generation error:", error);
 
-    return {
-      success: false,
-      error: 'Failed to generate response. Please try again.',
-    };
-  }
+		return {
+			success: false,
+			error: "Failed to generate response. Please try again.",
+		};
+	}
 }
 
 /*
