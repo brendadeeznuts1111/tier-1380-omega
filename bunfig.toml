@@ -1,0 +1,29 @@
+[install]
+# Install optional dependencies
+optional = true
+# Install dev dependencies  
+dev = true
+# Install peer dependencies
+peer = true
+# Production mode (no dev deps)
+production = false
+# Save text lockfile
+saveTextLockfile = false
+# Frozen lockfile mode
+frozenLockfile = false
+# Dry run mode
+dryRun = false
+# Concurrent scripts (cpu count * 2)
+concurrentScripts = 16
+# Installation strategy: "hoisted" or "isolated"
+linker = "hoisted"
+# Minimum release age (3 days in seconds)
+minimumReleaseAge = 259200
+# Exclude packages from minimum age check
+minimumReleaseAgeExcludes = ["@types/node", "typescript"]
+
+# Set default registry with token from environment variable
+registry = { url = "https://registry.npmjs.org", token = "$npm_token" }
+
+# Alternative: if needed, set a username/password
+# registry = "https://username:password@registry.npmjs.org"

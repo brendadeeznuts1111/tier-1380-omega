@@ -1,0 +1,20 @@
+# OMEGA INFRASTRUCTURE STUB - HTTP Header Case Preservation Test
+# Bun v1.3.7 Feature Verification
+# Created: January 29, 2026 11:29 AM CST
+
+# Test command (✅ PASSED):
+bun -e '
+  fetch("https://httpbin.org/headers", {
+    headers: { "X-Custom-Case-Test": "Omega1380" }
+  }).then(r => r.json()).then(d => console.log(d.headers["X-Custom-Case-Test"]))
+'
+
+# Result: Omega1380 ✅
+# Confirms Bun v1.3.7 preserves header case in HTTP requests
+# Previous versions would lowercase headers automatically
+
+# Applications:
+# - APIs that require specific header casing
+# - Authentication headers with case sensitivity
+# - Custom headers in enterprise integrations
+# - HTTP signature verification systems

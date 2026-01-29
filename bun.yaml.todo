@@ -1,0 +1,35 @@
+# OMEGA INFRASTRUCTURE STUB - Bun Configuration File
+# One-Liner Arsenal Benchmark Target
+# Created: January 29, 2026 11:21 AM CST
+# Purpose: Large configuration file for JSON5 vs JSON.parse benchmark
+
+# Application configuration
+app:
+  name: "omega-infrastructure"
+  version: "1.0.0"
+  environment: "development"
+
+# Performance settings
+performance:
+  maxWorkers: 4
+  timeout: 30000
+  cache:
+    enabled: true
+    ttl: 3600
+
+# Security configuration
+security:
+  session:
+    secret: "your-secret-key"
+    timeout: 86400
+  cors:
+    enabled: true
+    origins: ["http://localhost:3000"]
+
+# Theme and styling
+theme:
+  primary: "#6366f1"
+  secondary: "#8b5cf6"
+  success: "#22c55e"
+  warning: "#f59e0b"
+  error: "#ef4444"

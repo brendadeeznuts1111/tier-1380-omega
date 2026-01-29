@@ -1,0 +1,12 @@
+# OMEGA INFRASTRUCTURE STUB - S3 Compression Test
+# Bun v1.3.7 Brotli Compression Feature
+# Created: January 29, 2026 11:25 AM CST
+# Purpose: Test S3 contentEncoding: "br" functionality
+
+# Test command (requires S3 credentials):
+# bun -e 'new (await import("bun")).S3Client({region:"us-east-1", accessKeyId:"...", secretAccessKey:"...", bucket:"...", endpoint:"..."}).file("test-br-"+Date.now()+".json.br").write("hello world", {contentEncoding:"br"})'
+
+# Expected behavior:
+# - Content should be automatically brotli compressed
+# - contentEncoding header set to "br"
+# - S3 stores compressed data with proper metadata

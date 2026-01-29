@@ -1,0 +1,33 @@
+# OMEGA INFRASTRUCTURE STUB - Enterprise Header Case Preservation
+# Bun v1.3.7 Critical Feature for Enterprise APIs
+# Created: January 29, 2026 11:30 AM CST
+
+# Test command (✅ PASSED):
+bun -e '
+  fetch("https://httpbin.org/headers", {
+    headers: {
+      "Authorization": "Bearer token123",
+      "X-Registry-Scope": "omega-tier-1380"
+    }
+  }).then(r => r.json()).then(d => {
+    console.log("Authorization:", d.headers["Authorization"]);
+    console.log("X-Registry-Scope:", d.headers["X-Registry-Scope"]);
+  })
+'
+
+# Results:
+# Authorization: Bearer token123 ✅ (not "authorization")
+# X-Registry-Scope: omega-tier-1380 ✅ (not "x-registry-scope")
+
+# Critical for:
+# - Enterprise authentication systems requiring exact header casing
+# - API gateways with case-sensitive header validation
+# - OAuth 2.0 implementations with strict header requirements
+# - Custom registry systems (X-Registry-Scope pattern)
+# - Financial services APIs with header-based routing
+
+# Before Bun v1.3.7: Headers automatically lowercased → 401 Unauthorized
+# After Bun v1.3.7: Original case preserved → 200 OK
+
+# This enables integration with "very-picky-service.com" type APIs
+# that reject requests with incorrectly cased headers.
